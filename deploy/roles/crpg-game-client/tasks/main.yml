@@ -10,7 +10,7 @@
 
 - name: check game client files
   stat:
-    path: "{{ crpg_game_client_local_path }}/Modules/cRPG/{{ item }}"
+    path: "{{ crpg_game_client_local_path }}/Modules/cRPG_Beta/{{ item }}"
   loop:
     - "AssetPackages"
     - "SceneObj"
@@ -30,7 +30,7 @@
 
 - name: compress locally game client
   archive:
-    path: "{{ crpg_game_client_local_path }}/Modules/cRPG/*"
+    path: "{{ crpg_game_client_local_path }}/Modules/cRPG_Beta/*"
     dest: /tmp/crpg-client.zip
     format: zip
   delegate_to: localhost
