@@ -10,7 +10,7 @@
 
 - name: check game server files
   stat:
-    path: "{{ crpg_game_server_local_path  }}/Modules/cRPG/{{ item }}"
+    path: "{{ crpg_game_server_local_path  }}/Modules/cRPG_Beta/{{ item }}"
   loop:
     - "DsAssetPackages"
     - "SceneObj"
@@ -29,7 +29,7 @@
 
 - name: compress locally game server
   archive:
-    path: "{{ crpg_game_server_local_path }}/Modules/cRPG/*"
+    path: "{{ crpg_game_server_local_path }}/Modules/cRPG_Beta/*"
     dest: /tmp/crpg-server.zip
     format: zip
   delegate_to: localhost
