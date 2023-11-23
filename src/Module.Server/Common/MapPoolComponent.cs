@@ -1,6 +1,7 @@
 ﻿using Crpg.Module.Helpers;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.MountAndBlade.DedicatedCustomServer;
+using TaleWorlds.MountAndBlade.ListedServer;
 using TaleWorlds.MountAndBlade.Multiplayer.NetworkComponents;
 
 namespace Crpg.Module.Common;
@@ -21,7 +22,7 @@ internal class MapPoolComponent : MissionLogic
 
     public void ForceNextMap(string map)
     {
-        if (!DedicatedCustomServerSubModule.Instance.AutomatedMapPool.Contains(map))
+        if (ListedServerCommandManager.ServerSideIntermissionManager.AutomatedMapPool.Contains(map))
         {
             return;
         }
