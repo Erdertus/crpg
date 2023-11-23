@@ -94,7 +94,7 @@ internal class CrpgDuelGameMode : MissionBasedMultiplayerGameMode
                     duelClient,
                     new MultiplayerTimerComponent(), // round timer
                     new CrpgNotificationComponent(), // Inherits the MultiplayerGameNotificationsComponent component.
-                    new ConsoleMatchStartEndHandler(),
+                    // new ConsoleMatchStartEndHandler(),
                     new MissionLobbyEquipmentNetworkComponent(), // logic to change troop or perks
                     new MultiplayerTeamSelectComponent(),
                     new MissionHardBorderPlacer(),
