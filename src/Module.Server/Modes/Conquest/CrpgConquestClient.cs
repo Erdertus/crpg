@@ -21,7 +21,7 @@ internal class CrpgConquestClient : MissionMultiplayerGameModeBaseClient, IComma
     public override bool IsGameModeUsingGold => false;
     public override bool IsGameModeTactical => false;
     public override bool IsGameModeUsingRoundCountdown => true;
-    public override MissionLobbyComponent.MultiplayerGameType GameType => MissionLobbyComponent.MultiplayerGameType.Siege;
+    public override MultiplayerGameType GameType => MultiplayerGameType.Siege;
     public bool AreMoralesIndependent => false;
 
 #pragma warning disable CS0067 // False positive
