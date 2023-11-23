@@ -1,6 +1,7 @@
 ﻿using Crpg.Module.Helpers;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.MountAndBlade.DedicatedCustomServer;
+using TaleWorlds.MountAndBlade.Multiplayer.NetworkComponents;
 
 namespace Crpg.Module.Common;
 
