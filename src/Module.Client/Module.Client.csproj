@@ -6,7 +6,7 @@
     <RootNamespace>Crpg.Module</RootNamespace>
     <AssemblyName>Crpg.Module</AssemblyName>
     <ModuleName>cRPG</ModuleName>
-    <OutputPath>$(MB_CLIENT_PATH)\Modules\$(ModuleName)\bin\Win64_Shipping_Client</OutputPath>
+    <OutputPath>$(MB_DNSPY_BETA_CLIENT_PATH)\Modules\$(ModuleName)\bin\Win64_Shipping_Client</OutputPath>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
 
     <!-- Avoid generating pdb in release configuration -->
@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <Target Name="CheckMbPathDefined" BeforeTargets="GetReferenceAssemblyPaths">
-    <Error Text="Environment variable MB_CLIENT_PATH should be set to your Bannerlord client installation path" Condition="'$(MB_CLIENT_PATH)' == ''" />
+    <Error Text="Environment variable MB_DNSPY_BETA_CLIENT_PATH should be set to your Bannerlord client installation path" Condition="'$(MB_DNSPY_BETA_CLIENT_PATH)' == ''" />
   </Target>
 
   <ItemGroup>
@@ -54,22 +54,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="$(MB_CLIENT_PATH)\bin\Win64_Shipping_Client\TaleWorlds.*.dll">
+    <Reference Include="$(MB_DNSPY_BETA_CLIENT_PATH)\bin\Win64_Shipping_Client\TaleWorlds.*.dll">
       <Private>False</Private>
     </Reference>
 
-    <Reference Include="$(MB_CLIENT_PATH)\Modules\Native\bin\Win64_Shipping_Client\TaleWorlds.*.dll">
+    <Reference Include="$(MB_DNSPY_BETA_CLIENT_PATH)\Modules\Native\bin\Win64_Shipping_Client\TaleWorlds.*.dll">
       <Private>False</Private>
     </Reference>
 
-    <Reference Include="$(MB_CLIENT_PATH)\bin\Win64_Shipping_Client\Newtonsoft.Json.dll">
+    <Reference Include="$(MB_DNSPY_BETA_CLIENT_PATH)\bin\Win64_Shipping_Client\Newtonsoft.Json.dll">
       <Private>False</Private>
     </Reference>
 
     <!-- Remove native library (not .NET). -->
-    <Reference Remove="$(MB_CLIENT_PATH)/bin/Win64_Shipping_Client/TaleWorlds.Native.dll" />
+    <Reference Remove="$(MB_DNSPY_BETA_CLIENT_PATH)/bin/Win64_Shipping_Client/TaleWorlds.Native.dll" />
     <!-- This library causes dependency conflict. -->
-    <Reference Remove="$(MB_CLIENT_PATH)/bin/Win64_Shipping_Client/TaleWorlds.Starter.DotNetCore.dll" />
+    <Reference Remove="$(MB_DNSPY_BETA_CLIENT_PATH)/bin/Win64_Shipping_Client/TaleWorlds.Starter.DotNetCore.dll" />
   </ItemGroup>
 
   <ItemGroup>

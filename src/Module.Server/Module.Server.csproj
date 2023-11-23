@@ -6,14 +6,14 @@
     <RootNamespace>Crpg.Module</RootNamespace>
     <AssemblyName>Crpg.Module</AssemblyName>
     <ModuleName>cRPG</ModuleName>
-    <OutputPath>$(MB_SERVER_PATH)\Modules\$(ModuleName)\bin\Win64_Shipping_Server</OutputPath>
+    <OutputPath>$(mb_dnspy_beta_server_path)\Modules\$(ModuleName)\bin\Win64_Shipping_Server</OutputPath>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
 
     <DefineConstants>$(DefineConstants);CRPG_SERVER</DefineConstants>
   </PropertyGroup>
 
   <Target Name="CheckMbPathDefined" BeforeTargets="GetReferenceAssemblyPaths">
-    <Error Text="Environment variable MB_SERVER_PATH should be set to your Bannerlord server installation path" Condition="'$(MB_SERVER_PATH)' == ''" />
+    <Error Text="Environment variable mb_dnspy_beta_server_path should be set to your Bannerlord server installation path" Condition="'$(mb_dnspy_beta_server_path)' == ''" />
   </Target>
 
   <ItemGroup>
@@ -23,26 +23,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="$(MB_SERVER_PATH)\bin\Win64_Shipping_Server\TaleWorlds.*.dll">
+    <Reference Include="$(mb_dnspy_beta_server_path)\bin\Win64_Shipping_Server\TaleWorlds.*.dll">
       <Private>False</Private>
     </Reference>
 
-    <Reference Include="$(MB_SERVER_PATH)\bin\Win64_Shipping_Server\Newtonsoft.Json.dll">
+    <Reference Include="$(mb_dnspy_beta_server_path)\bin\Win64_Shipping_Server\Newtonsoft.Json.dll">
       <Private>False</Private>
     </Reference>
 
-    <Reference Include="$(MB_SERVER_PATH)\bin\Win64_Shipping_Server\System.Numerics.Vectors.dll">
+    <Reference Include="$(mb_dnspy_beta_server_path)\bin\Win64_Shipping_Server\System.Numerics.Vectors.dll">
       <Private>False</Private>
     </Reference>
 
     <!-- Remove native library (not .NET). -->
-    <Reference Remove="$(MB_SERVER_PATH)/bin/Win64_Shipping_Server/TaleWorlds.Native.dll" />
+    <Reference Remove="$(mb_dnspy_beta_server_path)/bin/Win64_Shipping_Server/TaleWorlds.Native.dll" />
     <!-- These libraries cause dependency conflicts. -->
-    <Reference Remove="$(MB_SERVER_PATH)/bin/Win64_Shipping_Server/TaleWorlds.Starter.DotNetCore.dll" />
-    <Reference Remove="$(MB_SERVER_PATH)/bin/Win64_Shipping_Server/TaleWorlds.Starter.DotNetCore.Linux.dll" />
-    <Reference Remove="$(MB_SERVER_PATH)/bin/Win64_Shipping_Server/TaleWorlds.MountAndBlade.DedicatedCustomServer.MapServer.dll" />
-    <Reference Remove="$(MB_SERVER_PATH)/bin/Win64_Shipping_Server/TaleWorlds.MountAndBlade.DedicatedCustomServer.WebPanel.Views.dll" />
-    <Reference Remove="$(MB_SERVER_PATH)/bin/Win64_Shipping_Server/TaleWorlds.MountAndBlade.DedicatedCustomServer.WebPanel.dll" />
+    <Reference Remove="$(mb_dnspy_beta_server_path)/bin/Win64_Shipping_Server/TaleWorlds.Starter.DotNetCore.dll" />
+    <Reference Remove="$(mb_dnspy_beta_server_path)/bin/Win64_Shipping_Server/TaleWorlds.Starter.DotNetCore.Linux.dll" />
+    <Reference Remove="$(mb_dnspy_beta_server_path)/bin/Win64_Shipping_Server/TaleWorlds.MountAndBlade.DedicatedCustomServer.MapServer.dll" />
+    <Reference Remove="$(mb_dnspy_beta_server_path)/bin/Win64_Shipping_Server/TaleWorlds.MountAndBlade.DedicatedCustomServer.WebPanel.Views.dll" />
+    <Reference Remove="$(mb_dnspy_beta_server_path)/bin/Win64_Shipping_Server/TaleWorlds.MountAndBlade.DedicatedCustomServer.WebPanel.dll" />
   </ItemGroup>
 
   <ItemGroup>

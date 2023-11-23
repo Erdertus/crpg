@@ -3,9 +3,9 @@
   "profiles": {
     "Module.Client": {
       "commandName": "Executable",
-        "executablePath": "%MB_CLIENT_PATH%\\bin\\Win64_Shipping_Client\\Bannerlord.exe",
+        "executablePath": "%MB_DNSPY_BETA_CLIENT_PATH%\\bin\\Win64_Shipping_Client\\Bannerlord.exe",
         "commandLineArgs": "_MODULES_*Native*cRPG*_MODULES_ /multiplayer",
-        "workingDirectory": "%MB_CLIENT_PATH%\\bin\\Win64_Shipping_Client"
+        "workingDirectory": "%MB_DNSPY_BETA_CLIENT_PATH%\\bin\\Win64_Shipping_Client"
     }
   }
 }

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="$(MB_SERVER_PATH)\bin\Win64_Shipping_Server\TaleWorlds.Library.dll" />
+    <Reference Include="$(mb_dnspy_beta_server_path)\bin\Win64_Shipping_Server\TaleWorlds.Library.dll" />
   </ItemGroup>
 
 </Project>
