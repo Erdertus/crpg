@@ -2,8 +2,8 @@
 using Crpg.Module.Notifications;
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
-using TaleWorlds.MountAndBlade.Source.Missions;
 using TaleWorlds.MountAndBlade.Multiplayer;
+using TaleWorlds.MountAndBlade.Source.Missions;
 
 #if CRPG_SERVER
 using Crpg.Module.Api;
@@ -94,7 +94,7 @@ internal class CrpgDuelGameMode : MissionBasedMultiplayerGameMode
                     duelClient,
                     new MultiplayerTimerComponent(), // round timer
                     new CrpgNotificationComponent(), // Inherits the MultiplayerGameNotificationsComponent component.
-                    new TaleWorlds.MountAndBlade.ConsoleMatchStartEndHandler(),
+                    new ConsoleMatchStartEndHandler(),
                     new MissionLobbyEquipmentNetworkComponent(), // logic to change troop or perks
                     new MultiplayerTeamSelectComponent(),
                     new MissionHardBorderPlacer(),

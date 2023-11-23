@@ -81,16 +81,21 @@ internal class CrpgDtvClient : MissionMultiplayerGameModeBaseClient
 
     private void HandleViscountUnderAttack(CrpgDtvViscountUnderAttackMessage message)
     {
-        if (message.Attacker != null)
+        if (message.AgentAttackerIndex >= Mission.Agents.Count)
         {
-            TextObject textObject = new("{=mfD3LkeQ}The Viscount is being attacked by {AGENT}!",
-            new Dictionary<string, object> { ["AGENT"] = message.Attacker.Name });
-            InformationManager.DisplayMessage(new InformationMessage
-            {
-                Information = textObject.ToString(),
-                Color = new Color(0.90f, 0.25f, 0.25f),
-                SoundEventPath = "event:/ui/notification/alert",
-            });
+            return;
         }
+
+        var attackerAgent = Mission.Agents[message.AgentAttackerIndex];
+
+        TextObject textObject = new("{=mfD3LkeQ}The Viscount is being attacked by {AGENT}!",
+        new Dictionary<string, object> { ["AGENT"] = attackerAgent?.Name ?? string.Empty });
+        InformationManager.DisplayMessage(new InformationMessage
+        {
+            Information = textObject.ToString(),
+            Color = new Color(0.90f, 0.25f, 0.25f),
+            SoundEventPath = "event:/ui/notification/alert",
+        });
+
     }
 }

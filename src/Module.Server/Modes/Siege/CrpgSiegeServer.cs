@@ -181,8 +181,13 @@ internal class CrpgSiegeServer : MissionMultiplayerGameModeBase, IAnalyticsFlagI
                 continue;
             }
 
+            if (_flagOwners[flag.FlagIndex] == null)
+            {
+                continue;
+            }
+
             GameNetwork.BeginModuleEventAsServer(networkPeer);
-            GameNetwork.WriteMessage(new FlagDominationCapturePointMessage(flag.FlagIndex, _flagOwners[flag.FlagIndex]));
+            GameNetwork.WriteMessage(new FlagDominationCapturePointMessage(flag.FlagIndex, _flagOwners[flag.FlagIndex]!.TeamIndex));
             GameNetwork.EndModuleEventAsServer();
         }
     }
@@ -358,7 +363,7 @@ internal class CrpgSiegeServer : MissionMultiplayerGameModeBase, IAnalyticsFlagI
                 flag.SetTeamColorsSynched(flagNewOwner.Color, flagNewOwner.Color2);
                 _flagOwners[flag.FlagIndex] = flagNewOwner;
                 GameNetwork.BeginBroadcastModuleEvent();
-                GameNetwork.WriteMessage(new FlagDominationCapturePointMessage(flag.FlagIndex, flagNewOwner));
+                GameNetwork.WriteMessage(new FlagDominationCapturePointMessage(flag.FlagIndex, flagNewOwner.TeamIndex));
                 GameNetwork.EndBroadcastModuleEvent(GameNetwork.EventBroadcastFlags.None);
                 _client?.OnCapturePointOwnerChanged(flag, flagNewOwner);
                 NotificationsComponent.FlagXCapturedByTeamX(flag, closestAgentToFlag!.Team);
