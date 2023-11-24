@@ -36,16 +36,11 @@ internal class CrpgSubModule : MBSubModuleBase
     private static bool _mapPoolAdded;
     public static CrpgSubModule Instance = default!;
     public Dictionary<PlayerId, IAddress> WhitelistedIps = new();
-    private IFirewallRule? _cachedFirewallRule;
     public int Port()
     {
         return TaleWorlds.MountAndBlade.Module.CurrentModule.StartupInfo.ServerPort;
     }
 
-    public IFirewallRule? GetCachedFirewallRule()
-    {
-        return _cachedFirewallRule;
-    }
 #endif
     static CrpgSubModule()
     {
@@ -58,20 +53,6 @@ internal class CrpgSubModule : MBSubModuleBase
     protected override void OnSubModuleLoad()
     {
         base.OnSubModuleLoad();
-
-#if CRPG_SERVER
-        CrpgSubModule.Instance = this;
-        var firewallRule = Firewall.GetFirewallRule(Port(), _cachedFirewallRule);
-        if (firewallRule == null)
-        {
-            Debug.Print("[Firewall] FirewallRule " + Firewall.GetFirewallRuleName(Port()) + " not found on your server. Creating...", 0, Debug.DebugColor.Red);
-            _cachedFirewallRule = Firewall.CreateFirewallRule(Port());
-        }
-        else
-        {
-            _cachedFirewallRule = firewallRule;
-        }
-#endif
         _constants = LoadCrpgConstants();
         TaleWorlds.MountAndBlade.Module.CurrentModule.AddMultiplayerGameMode(new CrpgBattleGameMode(_constants, isSkirmish: true));
         TaleWorlds.MountAndBlade.Module.CurrentModule.AddMultiplayerGameMode(new CrpgBattleGameMode(_constants, isSkirmish: false));
@@ -121,7 +102,7 @@ internal class CrpgSubModule : MBSubModuleBase
     public override void OnMultiplayerGameStart(Game game, object starterObject)
     {
         base.OnMultiplayerGameStart(game, starterObject);
-        AddMaps();
+        //AddMaps();
     }
 
     private static void AddMaps()
@@ -143,12 +124,12 @@ internal class CrpgSubModule : MBSubModuleBase
                 {
                     foreach (string map in maps)
                     {
-                        if (map == string.Empty)
+                        if (map == "")
                         {
                             continue;
                         }
 
-                        ListedServerCommandManager.ServerSideIntermissionManager.AddMapToAutomatedBattlePool(map);
+                        //DedicatedCustomServerSubModule.Instance.ServerSideIntermissionManager.AddMapToAutomatedBattlePool(map);
                         Debug.Print($"added {map} to map pool");
                     }
                 }

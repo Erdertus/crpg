@@ -15,18 +15,12 @@ public class RemoveIpFromFirewallBehavior : MissionNetwork
 
     public override void OnPlayerDisconnectedFromServer(NetworkCommunicator networkPeer)
     {
-        var cachedFirewallRule = CrpgSubModule.Instance.GetCachedFirewallRule();
-        if (cachedFirewallRule == null)
-        {
-            return;
-        }
 
         if (CrpgSubModule.Instance.WhitelistedIps.ContainsKey(networkPeer.PlayerConnectionInfo.PlayerID))
         {
             CrpgSubModule.Instance.WhitelistedIps.Remove(networkPeer.PlayerConnectionInfo.PlayerID);
             IAddress[] addresses = CrpgSubModule.Instance.WhitelistedIps.Values.ToArray();
             Debug.Print("[Firewall] " + networkPeer.UserName + " was removed from the firewall whitelist, whitelisted ip count: " + addresses.Length.ToString(), 0, Debug.DebugColor.Red);
-            cachedFirewallRule.RemoteAddresses = addresses;
         }
     }
 }
