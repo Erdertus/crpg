@@ -44,7 +44,7 @@
 
 - name: copy SubModule.xml server to host
   copy:
-    src: "{{ crpg_game_server_local_path  }}/Modules/cRPG/SubModule.xml"
+    src: "{{ crpg_game_server_local_path  }}/Modules/cRPG_Beta/SubModule.xml"
     dest: "{{ crpg_ui_path }}/SubModule.xml"
     owner: nginx
     group: nginx
