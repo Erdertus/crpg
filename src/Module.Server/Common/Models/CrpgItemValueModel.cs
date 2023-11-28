@@ -175,7 +175,7 @@ internal class CrpgItemValueModel : ItemValueModel
                 WeaponClass.TwoHandedSword => 27.5f,
                 WeaponClass.TwoHandedMace => 28.5f,
                 WeaponClass.TwoHandedAxe => 36f,
-                WeaponClass.TwoHandedPolearm => 25f,
+                WeaponClass.TwoHandedPolearm => 34f,
                 WeaponClass.OneHandedPolearm => 25f,
                 _ => float.MaxValue,
             };
@@ -309,7 +309,7 @@ internal class CrpgItemValueModel : ItemValueModel
         return maxTier * maxTier / 10f; // makes weapon of lower Tier Better
     }
 
-    private float CalculateDamageTypeFactor(DamageTypes damageType)
+    public static float CalculateDamageTypeFactor(DamageTypes damageType)
     {
         return damageType switch
         {
