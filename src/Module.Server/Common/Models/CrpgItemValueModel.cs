@@ -319,13 +319,13 @@ internal class CrpgItemValueModel : ItemValueModel
         };
     }
 
-    private float CalculateDamageTypeFactorForAmmo(DamageTypes damageType)
+    public static float CalculateDamageTypeFactorForAmmo(DamageTypes damageType)
     {
         return damageType switch
         {
             DamageTypes.Blunt => 2f,
             DamageTypes.Pierce => 1.75f,
-            _ => 1.175f,
+            _ => 1.02f,
         };
     }
 
@@ -434,9 +434,8 @@ internal class CrpgItemValueModel : ItemValueModel
         float arrowsTier = 10f
           * CalculateDamageTypeFactorForAmmo(weapon.ThrustDamageType) * CalculateDamageTypeFactorForAmmo(weapon.ThrustDamageType)
           * (10 + weapon.MissileDamage) * (10 + weapon.MissileDamage)
-          * (float)Math.Pow(weapon.MaxDataValue, 0.4f)
-          / 1537.6f
-          / 1.35f;
+          * (float)Math.Pow(weapon.MaxDataValue, 0.5f)
+          / 2600f;
         float boltsTier = 10f
           * CalculateDamageTypeFactorForAmmo(weapon.ThrustDamageType) * CalculateDamageTypeFactorForAmmo(weapon.ThrustDamageType)
           * (22 + weapon.MissileDamage) * (22 + weapon.MissileDamage)
