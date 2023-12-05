@@ -13,13 +13,13 @@ namespace Crpg.Module.Common;
 internal class KickInactiveBehavior : MissionBehavior
 {
     private readonly MissionTime _inactiveTimeLimit;
-    private readonly MultiplayerWarmupComponent _warmupComponent;
+    private readonly MultiplayerWarmupComponent? _warmupComponent;
     private readonly Dictionary<PlayerId, ActivityStatus> _lastActiveStatuses;
     private Timer? _checkTimer;
 
     public KickInactiveBehavior(
         float inactiveTimeLimit,
-        MultiplayerWarmupComponent warmupComponent)
+        MultiplayerWarmupComponent? warmupComponent)
     {
         _inactiveTimeLimit = MissionTime.Seconds(inactiveTimeLimit);
         _warmupComponent = warmupComponent;
@@ -30,9 +30,12 @@ internal class KickInactiveBehavior : MissionBehavior
 
     public override void OnMissionTick(float dt)
     {
-        if (_warmupComponent.IsInWarmup)
+        if (_warmupComponent != null)
         {
-            return;
+            if (_warmupComponent.IsInWarmup)
+            {
+                return;
+            }
         }
 
         _checkTimer ??= new Timer(Mission.CurrentTime, 1f);

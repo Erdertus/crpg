@@ -1,97 +1,121 @@
-﻿using System.Xml.Serialization;
+﻿using Crpg.Module.Common;
 using Crpg.Module.Rewards;
 using TaleWorlds.Core;
-using TaleWorlds.Library;
-using TaleWorlds.ModuleManager;
 using TaleWorlds.MountAndBlade;
-using TaleWorlds.MountAndBlade.Network.Messages;
+using TaleWorlds.MountAndBlade.MissionRepresentatives;
 using TaleWorlds.ObjectSystem;
 
 namespace Crpg.Module.Modes.TrainingGround;
 
 internal class CrpgTrainingGroundServer : MissionMultiplayerGameModeBase
 {
+    private readonly MissionScoreboardComponent _scoreboardComponent;
     private readonly CrpgRewardServer _rewardServer;
-    private bool _gameStarted;
 
-
-    public CrpgTrainingGroundServer(CrpgRewardServer rewardServer)
-    {
-        _rewardServer = rewardServer;
-    }
+    private MissionTimer? _rewardTickTimer;
 
     public override bool IsGameModeHidingAllAgentVisuals => true;
     public override bool IsGameModeUsingOpposingTeams => false;
-    public override bool AllowCustomPlayerBanners() => false;
-    public override bool UseRoundController() => false;
 
-    private CrpgTrainingGroundSpawningBehavior SpawningBehavior => (CrpgTrainingGroundSpawningBehavior)SpawnComponent.SpawningBehavior;
+    public CrpgTrainingGroundServer(
+        MissionScoreboardComponent scoreboardComponent,
+        CrpgRewardServer rewardServer)
+    {
+        _scoreboardComponent = scoreboardComponent;
+        _rewardServer = rewardServer;
+    }
 
     public override MissionLobbyComponent.MultiplayerGameType GetMissionType()
     {
-        return MissionLobbyComponent.MultiplayerGameType.Battle;
+        return MissionLobbyComponent.MultiplayerGameType.FreeForAll; // Avoids a crash on mission end.
     }
 
     public override void AfterStart()
     {
-        base.AfterStart();
+        AddTeams();
     }
 
-    public override void OnBehaviorInitialize()
+    public override void OnClearScene()
     {
-        base.OnBehaviorInitialize();
-    }
-
-    public override void OnRemoveBehavior()
-    {
-        base.OnRemoveBehavior();
-    }
-
-    public override bool CheckForWarmupEnd()
-    {
-        return true;
-    }
-
-    public override void OnPeerChangedTeam(NetworkCommunicator networkPeer, Team oldTeam, Team newTeam)
-    {
-        var missionPeer = networkPeer.GetComponent<MissionPeer>();
-        if (missionPeer == null || newTeam == Mission.SpectatorTeam)
-        {
-            return;
-        }
-
-        missionPeer.Team = Mission.DefenderTeam;
-    }
-
-    public override void OnAgentBuild(Agent agent, Banner banner)
-    {
-        base.OnAgentBuild(agent, banner);
-        // Synchronize health with all clients to make the spectator health bar work.
-        agent.UpdateSyncHealthToAllClients(true);
+        // https://forums.taleworlds.com/index.php?threads/missionbehavior-onmissionrestart-is-never-called.458204
+        _scoreboardComponent.ClearScores();
+        _scoreboardComponent.ResetBotScores();
+        ClearPeerCounts();
     }
 
     public override void OnMissionTick(float dt)
     {
-        base.OnMissionTick(dt);
-        if (MissionLobbyComponent.CurrentMultiplayerState != MissionLobbyComponent.MultiplayerGameState.Playing
-            || !CanGameModeSystemsTickThisFrame)
+        if (WarmupComponent != null)
+        {
+            if (WarmupComponent.IsInWarmup)
+            {
+                return;
+            }
+        }
+
+        RewardUsers();
+    }
+
+    public override void OnAgentRemoved(Agent affectedAgent, Agent? affectorAgent, AgentState agentState, KillingBlow blow)
+    {
+        if (blow.DamageType == DamageTypes.Invalid
+            || (agentState != AgentState.Unconscious && agentState != AgentState.Killed)
+            || !affectedAgent.IsHuman)
         {
             return;
         }
     }
 
-    protected override void HandleNewClientAfterSynchronized(NetworkCommunicator networkPeer)
+    public override bool CheckForMatchEnd()
     {
-        if (!_gameStarted)
-        {
-            return;
-        }
+        return false;
     }
 
-    private void SendDataToPeers(GameNetworkMessage message)
+    public override Team? GetWinnerTeam()
     {
-        GameNetwork.BeginBroadcastModuleEvent();
-        GameNetwork.WriteMessage(message);
-        GameNetwork.EndBroadcastModuleEvent(GameNetwork.EventBroadcastFlags.None);
+        int minScoreToWinMatch = MultiplayerOptions.OptionType.MinScoreToWinMatch.GetIntValue();
+        var sides = _scoreboardComponent.Sides;
+
+        Team? winnerTeam = null;
+        if (sides[(int)BattleSideEnum.Attacker].SideScore < minScoreToWinMatch
+            && sides[(int)BattleSideEnum.Defender].SideScore >= minScoreToWinMatch)
+        {
+            winnerTeam = Mission.Teams.Defender;
+        }
+
+        if (sides[(int)BattleSideEnum.Defender].SideScore < minScoreToWinMatch
+            && sides[(int)BattleSideEnum.Attacker].SideScore >= minScoreToWinMatch)
+        {
+            winnerTeam = Mission.Teams.Attacker;
+        }
+
+        return winnerTeam;
+    }
+
+    protected override void HandleEarlyNewClientAfterLoadingFinished(NetworkCommunicator networkPeer)
+    {
+        networkPeer.AddComponent<TeamDeathmatchMissionRepresentative>();
+    }
+
+    private void AddTeams()
+    {
+        BasicCultureObject cultureTeam1 = MBObjectManager.Instance.GetObject<BasicCultureObject>(MultiplayerOptions.OptionType.CultureTeam1.GetStrValue());
+        Banner bannerTeam1 = new(cultureTeam1.BannerKey, cultureTeam1.BackgroundColor1, cultureTeam1.ForegroundColor1);
+        Mission.Teams.Add(BattleSideEnum.Attacker, cultureTeam1.BackgroundColor1, cultureTeam1.ForegroundColor1, bannerTeam1, false, true);
+        BasicCultureObject cultureTeam2 = MBObjectManager.Instance.GetObject<BasicCultureObject>(MultiplayerOptions.OptionType.CultureTeam2.GetStrValue());
+        Banner bannerTeam2 = new(cultureTeam2.BannerKey, cultureTeam2.BackgroundColor2, cultureTeam2.ForegroundColor2);
+        Mission.Teams.Add(BattleSideEnum.Defender, cultureTeam2.BackgroundColor2, cultureTeam2.ForegroundColor2, bannerTeam2, false, true);
+    }
+
+    private void RewardUsers()
+    {
+        _rewardTickTimer ??= new MissionTimer(duration: CrpgServerConfiguration.RewardTick);
+        if (_rewardTickTimer.Check(reset: true))
+        {
+            _ = _rewardServer.UpdateCrpgUsersAsync(
+                durationRewarded: _rewardTickTimer.GetTimerDuration(),
+                durationUpkeep: 0,
+                constantMultiplier: 1);
+        }
     }
 }

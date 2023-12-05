@@ -1,0 +1,25 @@
+﻿<Prefab>
+  <Constants>
+  </Constants>
+  <Window>
+   <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" OrderEnabledAlpha="0.2">
+      <Children>
+        <ListPanel WidthSizePolicy="CoverChildren"
+                  HeightSizePolicy="CoverChildren"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Top"
+                  MarginTop="5">
+          <Children>
+            <TimerHud DataSource="{Timer}"
+                      WidthSizePolicy="Fixed"
+                      HeightSizePolicy="Fixed"
+                      SuggestedWidth="90"
+                      SuggestedHeight="26"
+                      VerticalAlignment="Center" />
+
+          </Children>
+        </ListPanel>
+      </Children>
+    </Widget>
+  </Window>
+</Prefab>
