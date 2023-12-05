@@ -32,27 +32,18 @@ internal class CrpgTrainingGroundServer : MissionMultiplayerGameModeBase
 
     public override void AfterStart()
     {
-        AddTeams();
+        AddTeam();
     }
 
     public override void OnClearScene()
     {
         // https://forums.taleworlds.com/index.php?threads/missionbehavior-onmissionrestart-is-never-called.458204
         _scoreboardComponent.ClearScores();
-        _scoreboardComponent.ResetBotScores();
         ClearPeerCounts();
     }
 
     public override void OnMissionTick(float dt)
     {
-        if (WarmupComponent != null)
-        {
-            if (WarmupComponent.IsInWarmup)
-            {
-                return;
-            }
-        }
-
         RewardUsers();
     }
 
@@ -66,45 +57,24 @@ internal class CrpgTrainingGroundServer : MissionMultiplayerGameModeBase
         }
     }
 
-    public override bool CheckForMatchEnd()
-    {
-        return false;
-    }
-
-    public override Team? GetWinnerTeam()
-    {
-        int minScoreToWinMatch = MultiplayerOptions.OptionType.MinScoreToWinMatch.GetIntValue();
-        var sides = _scoreboardComponent.Sides;
-
-        Team? winnerTeam = null;
-        if (sides[(int)BattleSideEnum.Attacker].SideScore < minScoreToWinMatch
-            && sides[(int)BattleSideEnum.Defender].SideScore >= minScoreToWinMatch)
-        {
-            winnerTeam = Mission.Teams.Defender;
-        }
-
-        if (sides[(int)BattleSideEnum.Defender].SideScore < minScoreToWinMatch
-            && sides[(int)BattleSideEnum.Attacker].SideScore >= minScoreToWinMatch)
-        {
-            winnerTeam = Mission.Teams.Attacker;
-        }
-
-        return winnerTeam;
-    }
-
     protected override void HandleEarlyNewClientAfterLoadingFinished(NetworkCommunicator networkPeer)
     {
-        networkPeer.AddComponent<TeamDeathmatchMissionRepresentative>();
+        networkPeer.AddComponent<FFAMissionRepresentative>();
     }
 
-    private void AddTeams()
+    protected override void HandleNewClientAfterSynchronized(NetworkCommunicator networkPeer)
+    {
+        MissionPeer component = networkPeer.GetComponent<MissionPeer>();
+        component.Team = Mission.AttackerTeam;
+        component.Culture = MBObjectManager.Instance.GetObject<BasicCultureObject>(MultiplayerOptions.OptionType.CultureTeam1.GetStrValue(MultiplayerOptions.MultiplayerOptionsAccessMode.CurrentMapOptions));
+    }
+
+    private void AddTeam()
     {
         BasicCultureObject cultureTeam1 = MBObjectManager.Instance.GetObject<BasicCultureObject>(MultiplayerOptions.OptionType.CultureTeam1.GetStrValue());
         Banner bannerTeam1 = new(cultureTeam1.BannerKey, cultureTeam1.BackgroundColor1, cultureTeam1.ForegroundColor1);
-        Mission.Teams.Add(BattleSideEnum.Attacker, cultureTeam1.BackgroundColor1, cultureTeam1.ForegroundColor1, bannerTeam1, false, true);
-        BasicCultureObject cultureTeam2 = MBObjectManager.Instance.GetObject<BasicCultureObject>(MultiplayerOptions.OptionType.CultureTeam2.GetStrValue());
-        Banner bannerTeam2 = new(cultureTeam2.BannerKey, cultureTeam2.BackgroundColor2, cultureTeam2.ForegroundColor2);
-        Mission.Teams.Add(BattleSideEnum.Defender, cultureTeam2.BackgroundColor2, cultureTeam2.ForegroundColor2, bannerTeam2, false, true);
+        Team team = Mission.Teams.Add(BattleSideEnum.Attacker, cultureTeam1.BackgroundColor1, cultureTeam1.ForegroundColor1, bannerTeam1, false, true);
+        team.SetIsEnemyOf(team, true);
     }
 
     private void RewardUsers()
@@ -113,7 +83,7 @@ internal class CrpgTrainingGroundServer : MissionMultiplayerGameModeBase
         if (_rewardTickTimer.Check(reset: true))
         {
             _ = _rewardServer.UpdateCrpgUsersAsync(
-                durationRewarded: _rewardTickTimer.GetTimerDuration(),
+                durationRewarded: _rewardTickTimer.GetTimerDuration() * 0.75f, // Reduce duration reward as multiplier must be int
                 durationUpkeep: 0,
                 constantMultiplier: 1);
         }

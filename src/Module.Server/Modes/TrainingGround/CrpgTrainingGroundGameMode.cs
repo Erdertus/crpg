@@ -35,11 +35,11 @@ internal class CrpgTrainingGroundGameMode : MissionBasedMultiplayerGameMode
 
 #if CRPG_CLIENT
     [ViewMethod(GameName)]
-    public static MissionView[] OpenCrpgTeamDeathmatch(Mission mission)
+    public static MissionView[] OpenCrpgTrainingGround(Mission mission)
     {
         CrpgExperienceTable experienceTable = new(_constants);
         MissionMultiplayerGameModeBaseClient gameModeClient = mission.GetMissionBehavior<MissionMultiplayerGameModeBaseClient>();
-        MissionView crpgEscapeMenu = ViewCreatorManager.CreateMissionView<CrpgMissionMultiplayerEscapeMenu>(isNetwork: false, null, "cRPGDTV", gameModeClient);
+        MissionView crpgEscapeMenu = ViewCreatorManager.CreateMissionView<CrpgMissionMultiplayerEscapeMenu>(isNetwork: false, null, "cRPGTrainingGround", gameModeClient);
 
         return new[]
         {
@@ -49,7 +49,6 @@ internal class CrpgTrainingGroundGameMode : MissionBasedMultiplayerGameMode
             ViewCreator.CreateMissionMainAgentCheerBarkControllerView(mission),
             crpgEscapeMenu,
             ViewCreator.CreateMissionAgentLabelUIHandler(mission),
-            ViewCreator.CreateMultiplayerTeamSelectUIHandler(),
             ViewCreator.CreateMissionScoreBoardUIHandler(mission, false),
             ViewCreator.CreateMultiplayerEndOfRoundUIHandler(),
             ViewCreator.CreateMultiplayerEndOfBattleUIHandler(),
@@ -63,7 +62,6 @@ internal class CrpgTrainingGroundGameMode : MissionBasedMultiplayerGameMode
             ViewCreator.CreateMissionMainAgentEquipDropView(mission),
             ViewCreator.CreateMissionBoundaryCrossingView(),
             new MissionBoundaryWallView(),
-            new SpectatorCameraView(),
             new CrpgAgentHud(experienceTable),
             // Draw flags but also player names when pressing ALT. (Native: CreateMissionFlagMarkerUIHandler)
             ViewCreatorManager.CreateMissionView<CrpgMarkerUiHandler>(isNetwork: false, null, gameModeClient),
@@ -96,7 +94,7 @@ internal class CrpgTrainingGroundGameMode : MissionBasedMultiplayerGameMode
 
                 new CrpgTrainingGroundClient(),
                 new MultiplayerTimerComponent(),
-                new MultiplayerTeamSelectComponent(),
+                //new MultiplayerTeamSelectComponent(),
                 new MissionHardBorderPlacer(),
                 new MissionBoundaryPlacer(),
                 new MissionBoundaryCrossingHandler(),
@@ -114,7 +112,7 @@ internal class CrpgTrainingGroundGameMode : MissionBasedMultiplayerGameMode
                 new MissionLobbyEquipmentNetworkComponent(),
 #if CRPG_SERVER
                 new CrpgTrainingGroundServer(scoreboardComponent, rewardServer),
-                new SpawnComponent(new TeamDeathmatchSpawnFrameBehavior(), new CrpgTrainingGroundSpawningBehavior(_constants)),
+                new SpawnComponent(new FFASpawnFrameBehavior(), new CrpgTrainingGroundSpawningBehavior(_constants)),
                 new CrpgUserManagerServer(crpgClient, _constants),
                 new KickInactiveBehavior(inactiveTimeLimit: 600, null),
                 new MapPoolComponent(),

@@ -8,7 +8,7 @@
                   HeightSizePolicy="CoverChildren"
                   HorizontalAlignment="Center"
                   VerticalAlignment="Top"
-                  MarginTop="5">
+                  MarginTop="10">
           <Children>
             <TimerHud DataSource="{Timer}"
                       WidthSizePolicy="Fixed"

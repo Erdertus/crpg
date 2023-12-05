@@ -20,7 +20,7 @@ internal class CrpgTrainingGroundScoreboardData : IScoreboardData
                         return string.Empty;
                     }
 
-                    if (crpgPeer.Clan.Name.Length <= 10)
+                    if (crpgPeer.Clan.Name.Length <= 18)
                     {
                         return crpgPeer.Clan.Name;
                     }
@@ -31,6 +31,8 @@ internal class CrpgTrainingGroundScoreboardData : IScoreboardData
                 },
                 _ => string.Empty),
             new("name", missionPeer => missionPeer.DisplayedName, _ => new TextObject("{=hvQSOi79}Bot").ToString()),
+            new("kill", missionPeer => missionPeer.KillCount.ToString(), bot => bot.KillCount.ToString()),
+            new("death", missionPeer => missionPeer.DeathCount.ToString(), bot => bot.DeathCount.ToString()),
         };
     }
 }

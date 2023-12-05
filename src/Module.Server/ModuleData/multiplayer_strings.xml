@@ -35,6 +35,11 @@
   <string id="str_multiplayer_official_game_type_explainer.cRPGDTV" text="{=bp8JJZpG}·   Defend the Viscount from waves of enemies!{newline}·   Earn rewards for protection!{newline}·   Upgrade your character on c-rpg.eu" />
   <string id="str_multiplayer_game_type.cRPGDTV" text="{=3uoZAXxh}Defend The Viscount" />
 
+  <!-- Training Ground -->
+  <string id="str_multiplayer_official_game_type_name.cRPGTrainingGround" text="{=LQyzqlpp}Training Ground" />
+  <string id="str_multiplayer_official_game_type_explainer.cRPGTrainingGround" text="{=vi7YzKqT}·   Hone your skills against others!{newline}·   Learn from the best!{newline}·   Earn experience and gold!" />
+  <string id="str_multiplayer_game_type.cRPGTrainingGround" text="{=7zzHNLqo}Training Ground" />
+
   <!-- Scoreboard -->
   <string id="str_scoreboard_header.life" text="{=fBDiQBrC}Life" />
 
