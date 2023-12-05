@@ -15,7 +15,7 @@ internal class CrpgTeamDeathmatchServer : MissionMultiplayerGameModeBase
     private MissionTimer? _rewardTickTimer;
 
     public override bool IsGameModeHidingAllAgentVisuals => true;
-    public override bool IsGameModeUsingOpposingTeams => false;
+    public override bool IsGameModeUsingOpposingTeams => true;
 
     public CrpgTeamDeathmatchServer(
         MissionScoreboardComponent scoreboardComponent,
