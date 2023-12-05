@@ -11,9 +11,7 @@ using Crpg.Module.Api;
 using Crpg.Module.Common.ChatCommands;
 #else
 using Crpg.Module.GUI;
-using Crpg.Module.GUI.Spectator;
 using Crpg.Module.GUI.TrainingGround;
-using Crpg.Module.GUI.HudExtension;
 using TaleWorlds.MountAndBlade.View;
 using TaleWorlds.MountAndBlade.View.MissionViews;
 #endif
@@ -94,7 +92,6 @@ internal class CrpgTrainingGroundGameMode : MissionBasedMultiplayerGameMode
 
                 new CrpgTrainingGroundClient(),
                 new MultiplayerTimerComponent(),
-                //new MultiplayerTeamSelectComponent(),
                 new MissionHardBorderPlacer(),
                 new MissionBoundaryPlacer(),
                 new MissionBoundaryCrossingHandler(),
@@ -114,7 +111,7 @@ internal class CrpgTrainingGroundGameMode : MissionBasedMultiplayerGameMode
                 new CrpgTrainingGroundServer(scoreboardComponent, rewardServer),
                 new SpawnComponent(new FFASpawnFrameBehavior(), new CrpgTrainingGroundSpawningBehavior(_constants)),
                 new CrpgUserManagerServer(crpgClient, _constants),
-                new KickInactiveBehavior(inactiveTimeLimit: 600, null),
+                new KickInactiveBehavior(inactiveTimeLimit: 120, null),
                 new MapPoolComponent(),
                 new ChatCommandsComponent(chatBox, crpgClient),
                 new CrpgActivityLogsBehavior(null, chatBox, crpgClient),
