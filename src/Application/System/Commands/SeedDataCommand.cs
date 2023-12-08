@@ -702,57 +702,19 @@ public record SeedDataCommand : IMediatorRequest
                     new("instance", "crpg01a"),
                 },
             };
-            ActivityLog activityLogGain1 = new()
+
+            ActivityLog[] newActivityLogCharacterEarned =
             {
-                Type = ActivityLogType.CharacterGain,
-                User = orle,
-                CreatedAt = DateTime.UtcNow.AddMinutes(-1),
-                Metadata =
-                {
-                    new("characterId", "2"),
-                    new("instance", "Battle"),
-                    new("experience", "12000"),
-                    new("gold", "989"),
-                },
-            };
-            ActivityLog activityLogGain2 = new()
-            {
-                Type = ActivityLogType.CharacterGain,
-                User = orle,
-                CreatedAt = DateTime.UtcNow.AddMinutes(-15),
-                Metadata =
-                {
-                    new("characterId", "2"),
-                    new("instance", "Battle"),
-                    new("experience", "32000"),
-                    new("gold", "1989"),
-                },
-            };
-            ActivityLog activityLogGain3 = new()
-            {
-                Type = ActivityLogType.CharacterGain,
-                User = orle,
-                CreatedAt = DateTime.UtcNow.AddMinutes(-25),
-                Metadata =
-                {
-                    new("characterId", "2"),
-                    new("instance", "DTV"),
-                    new("experience", "32000"),
-                    new("gold", "1989"),
-                },
-            };
-            ActivityLog activityLogGain4 = new()
-            {
-                Type = ActivityLogType.CharacterGain,
-                User = orle,
-                CreatedAt = DateTime.UtcNow.AddMinutes(-25),
-                Metadata =
-                {
-                    new("characterId", "2"),
-                    new("instance", "DTV"),
-                    new("experience", "32000"),
-                    new("gold", "1989"),
-                },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-1), Metadata = { new("characterId", "5"), new("instance", "Battle"), new("experience", "12000"), new("gold", "1244") } },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-12), Metadata = { new("characterId", "5"), new("instance", "Battle"), new("experience", "7000"), new("gold", "989") } },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-15), Metadata = { new("characterId", "5"), new("instance", "Battle"), new("experience", "32000"), new("gold", "-900") } },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-25), Metadata = { new("characterId", "6"), new("instance", "DTV"), new("experience", "32000"), new("gold", "1989") } },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-35), Metadata = { new("characterId", "6"), new("instance", "DTV"), new("experience", "32000"), new("gold", "1989") } },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-11), Metadata = { new("characterId", "5"), new("instance", "Battle"), new("experience", "1400"), new("gold", "1244") } },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-23), Metadata = { new("characterId", "5"), new("instance", "Battle"), new("experience", "200"), new("gold", "-12") } },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-17), Metadata = { new("characterId", "5"), new("instance", "Battle"), new("experience", "3310"), new("gold", "133") } },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-111), Metadata = { new("characterId", "5"), new("instance", "DTV"), new("experience", "1234"), new("gold", "1222") } },
+                new() { Type = ActivityLogType.CharacterEarned, User = orle, CreatedAt = DateTime.UtcNow.AddMinutes(-112), Metadata = { new("characterId", "5"), new("instance", "DTV"), new("experience", "3111"), new("gold", "-122") } },
             };
 
             ActivityLog[] newActivityLogs =
@@ -760,11 +722,11 @@ public record SeedDataCommand : IMediatorRequest
                 activityLogUserCreated1, activityLogUserDeleted1, activityLogUserRenamed1, activityLogUserReward1, activityLogItemBought1,
                 activityLogItemSold1, activityLogItemBroke1, activityLogItemUpgraded1, activityLogCharacterCreated1, activityLogCharacterDeleted1,
                 activityLogCharacterRespecialized1, activityLogCharacterRetired1, activityLogCharacterRewarded1, activityLogServerJoined1,
-                activityLogChatMessageSent1, activityLogChatMessageSent2, activityLogChatMessageSent3, activityLogTeamHit1, activityLogTeamHit2, activityLogGain1, activityLogGain2, activityLogGain3, activityLogGain4,
+                activityLogChatMessageSent1, activityLogChatMessageSent2, activityLogChatMessageSent3, activityLogTeamHit1, activityLogTeamHit2,
             };
 
             _db.ActivityLogs.RemoveRange(await _db.ActivityLogs.ToArrayAsync());
-            _db.ActivityLogs.AddRange(newActivityLogs);
+            _db.ActivityLogs.AddRange(newActivityLogs.Concat(newActivityLogCharacterEarned));
 
             Restriction takeoRestriction0 = new()
             {

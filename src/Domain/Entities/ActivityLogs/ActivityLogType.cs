@@ -18,7 +18,7 @@ public enum ActivityLogType
     CharacterRespecialized,
     CharacterRetired,
     CharacterRewarded,
-    CharacterGain,
+    CharacterEarned,
     ServerJoined,
     ChatMessageSent,
     TeamHit,
