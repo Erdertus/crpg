@@ -20,6 +20,7 @@ internal interface IActivityLogService
     ActivityLog CreateCharacterRespecializedLog(int userId, int characterId, int price);
     ActivityLog CreateCharacterRetiredLog(int userId, int characterId, int level);
     ActivityLog CreateCharacterRewardedLog(int userId, int characterId, int experience);
+    ActivityLog CreateCharacterGainLog(int userId, int characterId, string instance, int experience, int gold);
 }
 
 internal class ActivityLogService : IActivityLogService
@@ -156,6 +157,17 @@ internal class ActivityLogService : IActivityLogService
         {
             new("characterId", characterId.ToString()),
             new("experience", experience.ToString()),
+        });
+    }
+
+    public ActivityLog CreateCharacterGainLog(int userId, int characterId, string instance, int experience, int gold)
+    {
+        return CreateLog(ActivityLogType.CharacterGain, userId, new ActivityLogMetadata[]
+        {
+            new("characterId", characterId.ToString()),
+            new("instance", instance),
+            new("experience", experience.ToString()),
+            new("gold", gold.ToString()),
         });
     }
 

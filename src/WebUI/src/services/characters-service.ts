@@ -46,13 +46,14 @@ import {
 } from '@/models/character';
 import { ItemSlot, ItemType, type Item, type ItemArmorComponent } from '@/models/item';
 import { type HumanDuration } from '@/models/datetime';
+import { type ActivityLog } from '@/models/activity-logs';
 
 import { get, put, del } from '@/services/crpg-client';
 import { mapUserItem } from '@/services/users-service';
 import { armorTypes, computeAverageRepairCostPerHour } from '@/services/item-service';
 import { applyPolynomialFunction, clamp, roundFLoat } from '@/utils/math';
 import { computeLeftMs, parseTimestamp } from '@/utils/date';
-import { range } from '@/utils/array';
+import { range, groupBy } from '@/utils/array';
 
 export const getCharacters = () => get<Character[]>('/users/self/characters');
 
@@ -87,6 +88,34 @@ export const deleteCharacter = (characterId: number) =>
 
 export const getCharacterStatistics = (characterId: number) =>
   get<CharacterStatistics>(`/users/self/characters/${characterId}/statistics`);
+
+//
+export const getCharacterStatisticsCharts = async (characterId: number, type: string) => {
+  const res = await get<ActivityLog[]>(`/users/self/characters/${characterId}/statistics/charts`);
+
+  return res.reduce((out, l) => {
+    const currentEl = out.find(el => el.name === l.metadata.instance);
+
+    if (currentEl) {
+      currentEl.data.push([
+        new Date(l.createdAt),
+        parseInt(type === 'Exp' ? l.metadata.experience : l.metadata.gold, 10),
+      ]);
+    } else {
+      out.push({
+        name: l.metadata.instance,
+        data: [
+          [
+            new Date(l.createdAt),
+            parseInt(type === 'Exp' ? l.metadata.experience : l.metadata.gold, 10),
+          ],
+        ],
+      });
+    }
+
+    return out;
+  }, []);
+};
 
 export const getCharacterRating = (characterId: number) =>
   get<CharacterRating>(`/users/self/characters/${characterId}/rating`);
@@ -250,7 +279,7 @@ export const computeSpeedStats = (
     1 / (1 + applyPolynomialFunction(strength - 3, weightReductionPolynomialFactor));
   const freeWeight = 2.5 * (1 + (strength - 3) / 30);
   const perceivedWeight = Math.max(totalEncumbrance - freeWeight, 0) * weightReductionFactor;
-  const nakedSpeed = 0.60 + 0.034 * (20 * athletics + 2 * agility) / 26.0;
+  const nakedSpeed = 0.6 + (0.034 * (20 * athletics + 2 * agility)) / 26.0;
   const currentSpeed = clamp(
     nakedSpeed * Math.pow(361 / (361 + Math.pow(perceivedWeight, 5)), 0.055),
     0.1,
@@ -405,7 +434,8 @@ export const getRespecCapability = (
     return { price: 0, nextFreeAt: { days: 0, hours: 0, minutes: 0 }, enabled: true };
   }
 
-  const decayDivider = (new Date().getTime() - lastRespecDate.getTime()) / (respecializePriceHalfLife * 1000 * 3600);
+  const decayDivider =
+    (new Date().getTime() - lastRespecDate.getTime()) / (respecializePriceHalfLife * 1000 * 3600);
   const price = character.forTournament
     ? 0
     : Math.floor(

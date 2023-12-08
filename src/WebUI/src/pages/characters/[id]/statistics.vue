@@ -15,6 +15,8 @@ import { SVGRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import theme from '@/theme.json';
 import { d } from '@/services/translate-service';
+import { getCharacterStatisticsCharts } from '@/services/characters-service';
+import { characterKey } from '@/symbols/character';
 
 use([ToolboxComponent, BarChart, TooltipComponent, LegendComponent, GridComponent, SVGRenderer]);
 registerTheme('ovilia-green', theme);
@@ -35,6 +37,8 @@ definePage({
   },
 });
 
+const character = injectStrict(characterKey);
+
 const loading = shallowRef(false);
 const loadingOptions = {
   text: 'Loading…',
@@ -47,41 +51,64 @@ interface TimeSeries {
   data: [Date, number][];
 }
 
-// @ts-ignore
-const timeSeries = shallowRef<TimeSeries[]>([
-  {
-    name: 'Battle',
-    data: [
-      ...eachMinuteOfInterval({
-        start: subMinutes(Date.now(), 130),
-        end: subMinutes(Date.now(), 120),
-      }).map(d => [d, getRandom(70000, 120000)]),
-      ...eachMinuteOfInterval({
-        start: subMinutes(Date.now(), 20),
-        end: subMinutes(Date.now(), 10),
-      }).map(d => [d, getRandom(50000, 100000)]),
-    ],
-  },
-  {
-    name: 'DTV',
-    data: [
-      ...eachMinuteOfInterval({
-        start: subMinutes(Date.now(), 180),
-        end: subMinutes(Date.now(), 170),
-      }).map(d => [d, getRandom(30000, 40000)]),
-      ...eachMinuteOfInterval({
-        start: subMinutes(Date.now(), 40),
-        end: subMinutes(Date.now(), 30),
-      }).map(d => [d, getRandom(80000, 90000)]),
-    ],
-  },
-]);
+enum StatType {
+  'Exp' = 'Exp',
+  'Gold' = 'Gold',
+}
 
-const legend = ref<string[]>(timeSeries.value.map(ts => ts.name));
-const activeSeries = ref<string[]>(timeSeries.value.map(ts => ts.name));
+const statTypeModel = ref<StatType>(StatType['Exp']);
+const { state: characterStatistics, execute: loadCharacterStatistics } = await useAsyncState<
+  TimeSeries[]
+>(() => getCharacterStatisticsCharts(character.value.id, statTypeModel.value), [], {
+  immediate: true,
+  resetOnExecute: false,
+});
+watch(statTypeModel, async () => {
+  console.log('ddd');
+  await loadCharacterStatistics();
+  option.value = {
+    ...option.value,
+    series: characterStatistics.value.map(ts => ({ ...ts, type: 'bar' })),
+  };
+});
+
+// console.log('ddd', characterStatistics.value);
+
+// @ts-ignore
+// const timeSeries = shallowRef<TimeSeries[]>([
+//   {
+//     name: 'Battle',
+//     data: [
+//       ...eachMinuteOfInterval({
+//         start: subMinutes(Date.now(), 130),
+//         end: subMinutes(Date.now(), 120),
+//       }).map(d => [d, getRandom(70000, 120000)]),
+//       ...eachMinuteOfInterval({
+//         start: subMinutes(Date.now(), 20),
+//         end: subMinutes(Date.now(), 10),
+//       }).map(d => [d, getRandom(50000, 100000)]),
+//     ],
+//   },
+//   {
+//     name: 'DTV',
+//     data: [
+//       ...eachMinuteOfInterval({
+//         start: subMinutes(Date.now(), 180),
+//         end: subMinutes(Date.now(), 170),
+//       }).map(d => [d, getRandom(30000, 40000)]),
+//       ...eachMinuteOfInterval({
+//         start: subMinutes(Date.now(), 40),
+//         end: subMinutes(Date.now(), 30),
+//       }).map(d => [d, getRandom(80000, 90000)]),
+//     ],
+//   },
+// ]);
+
+const legend = ref<string[]>(characterStatistics.value.map(ts => ts.name));
+const activeSeries = ref<string[]>(characterStatistics.value.map(ts => ts.name));
 
 const total = computed(() =>
-  timeSeries.value
+  characterStatistics.value
     .filter(ts => activeSeries.value.includes(ts.name))
     .flatMap(ts => ts.data)
     .filter(([date]) => date.getTime() > start.value && date.getTime() < end.value)
@@ -95,13 +122,6 @@ function getRandom(min: number, max: number) {
   const randomWithinRange = random + min;
   return randomWithinRange;
 }
-
-enum StatType {
-  'Exp' = 'Exp',
-  'Gold' = 'Gold',
-}
-
-const statTypeModel = ref<StatType>(StatType['Exp']);
 
 enum Zoom {
   '1h' = '1h',
@@ -176,7 +196,7 @@ const option = shallowRef<EChartsOption>({
       },
     },
   },
-  series: timeSeries.value.map(ts => ({ ...ts, type: 'bar' })),
+  series: characterStatistics.value.map(ts => ({ ...ts, type: 'bar' })),
 });
 
 const setZoom = () => {
@@ -199,8 +219,8 @@ interface LegendSelectEvent {
 
 const onLegendSelectChanged = (e: LegendSelectEvent) => {
   activeSeries.value = Object.entries(e.selected)
-    .filter(([legend, status]) => Boolean(status))
-    .map(([legend, status]) => legend);
+    .filter(([_legend, status]) => Boolean(status))
+    .map(([legend, _status]) => legend);
 };
 
 watch(
@@ -215,6 +235,7 @@ watch(
 <template>
   <div>
     <div class="mx-auto">
+      <!-- <div>{{ characterStatistics }}</div> -->
       <div class="flex items-center justify-center gap-8">
         <OTabs v-model="statTypeModel" type="fill-rounded" contentClass="hidden">
           <OTabItem :value="StatType['Exp']" :label="`Exp.`" />
@@ -229,8 +250,9 @@ watch(
           <OTabItem :value="Zoom['14d']" :label="$t('dateTimeFormat.dd', { days: 14 })" />
         </OTabs>
         <div>
-          <!-- <div class="text-lg font-semibold text-primary">{{ $n(total) }} exp.</div> -->
-          <div class="text-lg font-semibold text-primary">{{ $n(total) }} gold</div>
+          <div class="text-lg font-semibold text-primary">
+            {{ $n(total) }} {{ statTypeModel === StatType.Exp ? 'exp.' : 'gold' }}
+          </div>
         </div>
       </div>
 
