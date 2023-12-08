@@ -8,27 +8,24 @@ import {
   type GridComponentOption,
   TooltipComponent,
   type TooltipComponentOption,
+  LegendComponent,
+  type LegendComponentOption,
 } from 'echarts/components';
 import { SVGRenderer } from 'echarts/renderers';
-import VChart, { THEME_KEY } from 'vue-echarts';
+import VChart from 'vue-echarts';
 import theme from '@/theme.json';
 import { d } from '@/services/translate-service';
 
-use([ToolboxComponent, BarChart, TooltipComponent, GridComponent, SVGRenderer]);
+use([ToolboxComponent, BarChart, TooltipComponent, LegendComponent, GridComponent, SVGRenderer]);
 registerTheme('ovilia-green', theme);
 type EChartsOption = ComposeOption<
-  // | TitleComponentOption
-  // | LegendComponentOption
-  ToolboxComponentOption | TooltipComponentOption | GridComponentOption | BarSeriesOption
+  | LegendComponentOption
+  | ToolboxComponentOption
+  | TooltipComponentOption
+  | GridComponentOption
+  | BarSeriesOption
 >;
-import {
-  eachHourOfInterval,
-  eachDayOfInterval,
-  subMinutes,
-  subHours,
-  subDays,
-  eachMinuteOfInterval,
-} from 'date-fns';
+import { subMinutes, subHours, subDays, eachMinuteOfInterval } from 'date-fns';
 
 definePage({
   props: true,
@@ -41,72 +38,55 @@ definePage({
 const loading = shallowRef(false);
 const loadingOptions = {
   text: 'Loading…',
-  color: '#4ea397',
+  color: '#4ea397', // TODO:
   maskColor: 'rgba(255, 255, 255, 0.4)',
 };
-const option = shallowRef<EChartsOption>({
-  xAxis: {
-    type: 'time',
-    min: subHours(Date.now(), 1).getTime(),
-    max: Date.now(),
-    splitLine: {
-      show: false,
-    },
-    splitArea: {
-      show: false,
-    },
-  },
-  yAxis: {
-    type: 'value',
-    splitArea: {
-      show: false,
-    },
-  },
-  toolbox: {
-    // show: true,
-    feature: {
-      dataView: { show: true, readOnly: false },
-      saveAsImage: { show: true },
-    },
-  },
-  tooltip: {
-    trigger: 'axis', // TODO:
-    axisPointer: {
-      type: 'shadow',
-      label: {
-        formatter: param => d(new Date(param.value), 'long'),
-      },
-    },
-    // formatter: param => {
-    //   const [date, value] = param.data;
-    //   return `${date.toISOString()} ${value}`;
-    // },
-  },
-  grid: {
-    // left: '3%',
-    // right: '4%',
-    // bottom: '3%',
-    // containLabel: true,
-  },
-  series: [
-    {
-      name: 'Battle',
-      type: 'bar',
-      data: [
-        ...eachMinuteOfInterval({
-          start: subMinutes(Date.now(), 130),
-          end: subMinutes(Date.now(), 120),
-        }).map(d => [d, getRandom(70000, 120000)]),
-        ...eachMinuteOfInterval({
-          start: subMinutes(Date.now(), 20),
-          end: subMinutes(Date.now(), 10),
-        }).map(d => [d, getRandom(50000, 100000)]),
-      ],
-    },
-  ],
-});
 
-const chart = shallowRef<InstanceType<typeof VChart> | null>(null);
+interface TimeSeries {
+  name: string;
+  data: [Date, number][];
+}
+
+// @ts-ignore
+const timeSeries = shallowRef<TimeSeries[]>([
+  {
+    name: 'Battle',
+    data: [
+      ...eachMinuteOfInterval({
+        start: subMinutes(Date.now(), 130),
+        end: subMinutes(Date.now(), 120),
+      }).map(d => [d, getRandom(70000, 120000)]),
+      ...eachMinuteOfInterval({
+        start: subMinutes(Date.now(), 20),
+        end: subMinutes(Date.now(), 10),
+      }).map(d => [d, getRandom(50000, 100000)]),
+    ],
+  },
+  {
+    name: 'DTV',
+    data: [
+      ...eachMinuteOfInterval({
+        start: subMinutes(Date.now(), 180),
+        end: subMinutes(Date.now(), 170),
+      }).map(d => [d, getRandom(30000, 40000)]),
+      ...eachMinuteOfInterval({
+        start: subMinutes(Date.now(), 40),
+        end: subMinutes(Date.now(), 30),
+      }).map(d => [d, getRandom(80000, 90000)]),
+    ],
+  },
+]);
+
+const legend = ref<string[]>(timeSeries.value.map(ts => ts.name));
+const activeSeries = ref<string[]>(timeSeries.value.map(ts => ts.name));
+
+const total = computed(() =>
+  timeSeries.value
+    .filter(ts => activeSeries.value.includes(ts.name))
+    .flatMap(ts => ts.data)
+    .filter(([date]) => date.getTime() > start.value && date.getTime() < end.value)
+    .reduce((total, [_date, value]) => total + value, 0)
+);
 
 function getRandom(min: number, max: number) {
   const floatRandom = Math.random();
@@ -116,8 +96,14 @@ function getRandom(min: number, max: number) {
   return randomWithinRange;
 }
 
+enum StatType {
+  'Exp' = 'Exp',
+  'Gold' = 'Gold',
+}
+
+const statTypeModel = ref<StatType>(StatType['Exp']);
+
 enum Zoom {
-  '30m' = '30m',
   '1h' = '1h',
   '3h' = '3h',
   '12h' = '12h',
@@ -126,13 +112,11 @@ enum Zoom {
   '14d' = '14d',
 }
 
-// const chart = ref<VueApexChartsComponent | null>(null);
+const chart = shallowRef<InstanceType<typeof VChart> | null>(null);
 const zoomModel = ref<Zoom>(Zoom['1h']);
 
 const getStart = (zoom: Zoom) => {
   switch (zoom) {
-    case Zoom['30m']:
-      return subMinutes(Date.now(), 30).getTime();
     case Zoom['1h']:
       return subHours(Date.now(), 1).getTime();
     case Zoom['3h']:
@@ -149,67 +133,116 @@ const getStart = (zoom: Zoom) => {
 };
 
 const start = computed(() => getStart(zoomModel.value));
-// const total = computed(() => getTotal(zoomModel.value));
+const end = ref<number>(new Date().getTime());
+
+const option = shallowRef<EChartsOption>({
+  xAxis: {
+    type: 'time',
+    min: getStart(Zoom['1h']),
+    max: Date.now(),
+    splitLine: {
+      show: false,
+    },
+    splitArea: {
+      show: false,
+    },
+  },
+  yAxis: {
+    type: 'value',
+    splitArea: {
+      show: false,
+    },
+  },
+  legend: {
+    data: legend.value,
+    orient: 'vertical',
+    top: 'center',
+    itemGap: 16,
+    right: 0,
+  },
+  toolbox: {
+    show: false, // TODO:
+    feature: {
+      dataView: { show: true, readOnly: false },
+      saveAsImage: { show: true },
+    },
+  },
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'shadow',
+      label: {
+        formatter: param => d(new Date(param.value), 'long'),
+      },
+    },
+  },
+  series: timeSeries.value.map(ts => ({ ...ts, type: 'bar' })),
+});
 
 const setZoom = () => {
-  // chart.value?.dispatchAction({
-  //   type:'dataZoom',
-  //   start: number,
-  //   // percentage of ending position; 0 - 100
-  //   end: number,
-  // })
-
+  end.value = new Date().getTime();
   option.value = {
     ...option.value,
     xAxis: {
       ...option.value.xAxis,
       min: start.value,
-      max: new Date().getTime(),
+      max: end.value,
     },
   };
 };
 
-watch(zoomModel, () => {
-  setZoom();
-});
+interface LegendSelectEvent {
+  name: string;
+  type: 'legendselectchanged';
+  selected: Record<string, boolean>;
+}
+
+const onLegendSelectChanged = (e: LegendSelectEvent) => {
+  activeSeries.value = Object.entries(e.selected)
+    .filter(([legend, status]) => Boolean(status))
+    .map(([legend, status]) => legend);
+};
+
+watch(
+  zoomModel,
+  () => {
+    setZoom();
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
   <div>
-    <div class="mx-auto max-w-2xl">
-      <pre>{{ { zoomModel, start } }}</pre>
-      <OTabs v-model="zoomModel" type="fill-rounded">
-        <OTabItem :value="Zoom['30m']">
-          <template #header>30m</template>
-        </OTabItem>
-        <OTabItem :value="Zoom['1h']">
-          <template #header>1h</template>
-        </OTabItem>
-        <OTabItem :value="Zoom['3h']">
-          <template #header>3h</template>
-        </OTabItem>
-        <OTabItem :value="Zoom['12h']">
-          <template #header>12h</template>
-        </OTabItem>
-        <OTabItem :value="Zoom['2d']">
-          <template #header>2d</template>
-        </OTabItem>
-        <OTabItem :value="Zoom['7d']">
-          <template #header>7d</template>
-        </OTabItem>
-        <OTabItem :value="Zoom['14d']">
-          <template #header>14d</template>
-        </OTabItem>
-      </OTabs>
+    <div class="mx-auto">
+      <div class="flex items-center justify-center gap-8">
+        <OTabs v-model="statTypeModel" type="fill-rounded" contentClass="hidden">
+          <OTabItem :value="StatType['Exp']" :label="`Exp.`" />
+          <OTabItem :value="StatType['Gold']" :label="`Gold`" />
+        </OTabs>
+        <OTabs v-model="zoomModel" type="fill-rounded" contentClass="hidden">
+          <OTabItem :value="Zoom['1h']" :label="$t('dateTimeFormat.hh', { hours: 1 })" />
+          <OTabItem :value="Zoom['3h']" :label="$t('dateTimeFormat.hh', { hours: 3 })" />
+          <OTabItem :value="Zoom['12h']" :label="$t('dateTimeFormat.hh', { hours: 12 })" />
+          <OTabItem :value="Zoom['2d']" :label="$t('dateTimeFormat.dd', { days: 2 })" />
+          <OTabItem :value="Zoom['7d']" :label="$t('dateTimeFormat.dd', { days: 7 })" />
+          <OTabItem :value="Zoom['14d']" :label="$t('dateTimeFormat.dd', { days: 14 })" />
+        </OTabs>
+        <div>
+          <!-- <div class="text-lg font-semibold text-primary">{{ $n(total) }} exp.</div> -->
+          <div class="text-lg font-semibold text-primary">{{ $n(total) }} gold</div>
+        </div>
+      </div>
 
       <VChart
-        class="h-[500px]"
+        class="h-[40rem]"
         ref="chart"
         theme="ovilia-green"
         :option="option"
         autoresize
         :loading="loading"
         :loadingOptions="loadingOptions"
+        @legendselectchanged="onLegendSelectChanged"
       />
     </div>
   </div>
