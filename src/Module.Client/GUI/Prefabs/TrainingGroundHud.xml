@@ -4,6 +4,10 @@
   <Window>
    <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" OrderEnabledAlpha="0.2">
       <Children>
+        
+      <!--Markers-->
+      <TrainingGroundMarkers DataSource="{Markers}" />
+
         <ListPanel WidthSizePolicy="CoverChildren"
                   HeightSizePolicy="CoverChildren"
                   HorizontalAlignment="Center"

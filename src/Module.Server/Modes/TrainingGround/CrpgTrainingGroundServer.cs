@@ -2,7 +2,6 @@
 using Crpg.Module.Rewards;
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
-using TaleWorlds.MountAndBlade.MissionRepresentatives;
 using TaleWorlds.ObjectSystem;
 
 namespace Crpg.Module.Modes.TrainingGround;
@@ -59,7 +58,7 @@ internal class CrpgTrainingGroundServer : MissionMultiplayerGameModeBase
 
     protected override void HandleEarlyNewClientAfterLoadingFinished(NetworkCommunicator networkPeer)
     {
-        networkPeer.AddComponent<FFAMissionRepresentative>();
+        networkPeer.AddComponent<TrainingGroundMissionRepresentative>();
     }
 
     protected override void HandleNewClientAfterSynchronized(NetworkCommunicator networkPeer)

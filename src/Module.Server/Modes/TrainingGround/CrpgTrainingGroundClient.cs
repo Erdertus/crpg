@@ -8,8 +8,8 @@ namespace Crpg.Module.Modes.TrainingGround;
 
 internal class CrpgTrainingGroundClient : MissionMultiplayerGameModeBaseClient
 {
-    private FFAMissionRepresentative? _myRepresentative;
-
+    public TrainingGroundMissionRepresentative? MyRepresentative { get; private set; }
+    public event Action OnMyRepresentativeAssigned = default!;
     public override bool IsGameModeUsingGold => false;
     public override bool IsGameModeTactical => false;
     public override bool IsGameModeUsingRoundCountdown => false;
@@ -43,6 +43,7 @@ internal class CrpgTrainingGroundClient : MissionMultiplayerGameModeBaseClient
 
     private void OnMyClientSynchronized()
     {
-        _myRepresentative = GameNetwork.MyPeer.GetComponent<FFAMissionRepresentative>();
+        MyRepresentative = GameNetwork.MyPeer.GetComponent<TrainingGroundMissionRepresentative>();
+        OnMyRepresentativeAssigned?.Invoke();
     }
 }
