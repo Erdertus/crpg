@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Crpg.Launcher;
-using LaucherV2;
 using LauncherV2;
 
-namespace LauncherV2;
+namespace LauncherV2.Gui.LauncherHelper;
 internal class Config
 {
     public static string gameLocation = string.Empty;
@@ -17,7 +15,7 @@ internal class Config
     {
         if (!File.Exists("config.ini"))
         {
-            Form1.Instance!.WriteToConsole("no config file found");
+            CrpgHashMethods.WriteToConsole("no config file found");
             return false;
         }
 
@@ -32,12 +30,12 @@ internal class Config
                 {
                     var key = keyValue[0].Trim();
                     var value = keyValue[1].Trim();
-                    if(key == "Platform")
+                    if (key == "Platform")
                     {
                         if (Enum.TryParse(value, out GameInstallationFolderResolver.Platform platformInConfig))
                         {
-                            platform = (GameInstallationFolderResolver.Platform)platformInConfig;
-                            Form1.Instance!.WriteToConsole("parsing platform");
+                            platform = platformInConfig;
+                            CrpgHashMethods.WriteToConsole("parsing platform");
                         }
                     }
 

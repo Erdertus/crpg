@@ -4,7 +4,7 @@ using Gameloop.Vdf;
 using Gameloop.Vdf.Linq;
 using Microsoft.Win32;
 
-namespace Crpg.Launcher;
+namespace LauncherV2.Gui.LauncherHelper;
 internal class GameInstallationFolderResolver
 {
     public enum Platform
@@ -56,19 +56,19 @@ internal class GameInstallationFolderResolver
 
     public static GameInstallationInfo? ResolveBannerlordInstallation()
     {
-        GameInstallationInfo? bannerlordInstallation = GameInstallationFolderResolver.ResolveBannerlordSteamInstallation();
+        var bannerlordInstallation = ResolveBannerlordSteamInstallation();
         if (bannerlordInstallation != null)
         {
             return bannerlordInstallation;
         }
 
-        bannerlordInstallation = GameInstallationFolderResolver.ResolveBannerlordEpicGamesInstallation();
+        bannerlordInstallation = ResolveBannerlordEpicGamesInstallation();
         if (bannerlordInstallation != null)
         {
             return bannerlordInstallation;
         }
 
-        bannerlordInstallation = GameInstallationFolderResolver.ResolveBannerlordXboxInstallation();
+        bannerlordInstallation = ResolveBannerlordXboxInstallation();
         if (bannerlordInstallation != null)
         {
             return bannerlordInstallation;
@@ -91,7 +91,7 @@ internal class GameInstallationFolderResolver
             return null;
         }
 
-        VProperty vdf = VdfConvert.Deserialize(File.ReadAllText(vdfPath));
+        var vdf = VdfConvert.Deserialize(File.ReadAllText(vdfPath));
 
         for (int i = 0; ; i += 1)
         {

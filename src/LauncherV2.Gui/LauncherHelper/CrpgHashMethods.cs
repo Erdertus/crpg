@@ -5,27 +5,36 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-
-namespace LaucherV2;
+using LauncherV2;
+namespace LauncherV2.Gui.LauncherHelper;
 internal static class CrpgHashMethods
 {
+    public static void WriteToConsole(string text)
+    {
+#if Launcher_Gui
+        WriteToConsole(text);
+#endif
+#if Launcher_Console
+        Console.WriteLine(text);
+#endif
+    }
     public static async Task VerifyGameFiles(string path)
     {
-        Form1.Instance!.WriteToConsole($"Verifying Game Files now");
+        WriteToConsole($"Verifying Game Files now");
         Stopwatch stopwatch = new Stopwatch(); // Create a Stopwatch instance
 
         if (Directory.Exists(path))
         {
             stopwatch.Start(); // Start the timing
-            XmlDocument xmlDoc = await CrpgHashMethods.GenerateCrpgFolderHashMap(Path.Combine(path, "Modules/cRPG"));
+            var xmlDoc = await GenerateCrpgFolderHashMap(Path.Combine(path, "Modules/cRPG"));
             stopwatch.Stop(); // Stop the timing
             xmlDoc.Save("crpgXmlHash.xml");
-            Form1.Instance!.WriteToConsole($"Execution Time: {stopwatch.ElapsedMilliseconds} ms");
+            WriteToConsole($"Execution Time: {stopwatch.ElapsedMilliseconds} ms");
 
         }
         else
         {
-            Form1.Instance!.WriteToConsole("Please specify the bannerlord folder location before");
+            WriteToConsole("Please specify the bannerlord folder location before");
         }
     }
 
@@ -35,7 +44,7 @@ internal static class CrpgHashMethods
         var root = document.CreateElement("CrpgHashMap");
         if (!Directory.Exists(path))
         {
-            Form1.Instance!.WriteToConsole($"cRPG is not installed at {path}");
+            WriteToConsole($"cRPG is not installed at {path}");
             return document;
         }
 
@@ -67,7 +76,7 @@ internal static class CrpgHashMethods
             }
         }
 
-        XmlElement restNode = document.CreateElement("Rest");
+        var restNode = document.CreateElement("Rest");
         restNode.SetAttribute("Name", "Rest");
         restNode.SetAttribute("Hash", restHash.ToString());
 
@@ -77,7 +86,7 @@ internal static class CrpgHashMethods
 
     public static async Task GenerateCrpgSceneObjHashMap(string sceneObjPath, XmlDocument doc)
     {
-        XmlElement mapsNode = doc.CreateElement("Maps");
+        var mapsNode = doc.CreateElement("Maps");
         string[] mapFolders = Directory.GetDirectories(sceneObjPath);
 
         var mapHashTasks = mapFolders.Select(map =>
@@ -101,7 +110,7 @@ internal static class CrpgHashMethods
 
     public static async Task GenerateCrpgAssetsHashMap(string assetsPath, XmlDocument doc)
     {
-        XmlElement assetsNode = doc.CreateElement("Assets");
+        var assetsNode = doc.CreateElement("Assets");
         string[] assetFiles = Directory.GetFiles(assetsPath);
 
         var assetHashTasks = assetFiles.Select(file =>
@@ -150,7 +159,7 @@ internal static class CrpgHashMethods
             fileHash = await XXHash.xxHash64.ComputeHashAsync(stream);
         }
 
-        Form1.Instance!.WriteToConsole($"Hashing {Path.GetFileName(filePath)}");
+        WriteToConsole($"Hashing {Path.GetFileName(filePath)}");
         return fileHash;
     }
 }

@@ -12,6 +12,7 @@
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
+    <DefineConstants>$(DefineConstants);Launcher_Gui</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

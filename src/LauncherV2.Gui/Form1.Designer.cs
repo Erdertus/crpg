@@ -1,4 +1,4 @@
-﻿namespace LaucherV2;
+﻿namespace LauncherV2;
 
 partial class Form1
 {
@@ -39,7 +39,7 @@ partial class Form1
         tableLayoutPanel3 = new TableLayoutPanel();
         changeLocationButton = new Button();
         startCrpgButton = new Button();
-        comboBox1 = new ComboBox();
+        platformComboBox1 = new ComboBox();
         tableLayoutPanel1.SuspendLayout();
         tableLayoutPanel2.SuspendLayout();
         tableLayoutPanel4.SuspendLayout();
@@ -144,7 +144,7 @@ partial class Form1
         tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
         tableLayoutPanel3.Controls.Add(changeLocationButton, 0, 2);
         tableLayoutPanel3.Controls.Add(startCrpgButton, 0, 0);
-        tableLayoutPanel3.Controls.Add(comboBox1, 0, 1);
+        tableLayoutPanel3.Controls.Add(platformComboBox1, 0, 1);
         tableLayoutPanel3.Location = new Point(538, 3);
         tableLayoutPanel3.Name = "tableLayoutPanel3";
         tableLayoutPanel3.RowCount = 3;
@@ -174,14 +174,15 @@ partial class Form1
         startCrpgButton.UseVisualStyleBackColor = true;
         startCrpgButton.Click += StartCrpgButton_Click;
         // 
-        // comboBox1
+        // platformComboBox1
         // 
-        comboBox1.FormattingEnabled = true;
-        comboBox1.Location = new Point(3, 33);
-        comboBox1.Name = "comboBox1";
-        comboBox1.Size = new Size(133, 23);
-        comboBox1.TabIndex = 8;
-        comboBox1.SelectedIndexChanged += platformComboBox1_SelectedIndexChanged;
+        platformComboBox1.Anchor = AnchorStyles.None;
+        platformComboBox1.FormattingEnabled = true;
+        platformComboBox1.Location = new Point(3, 35);
+        platformComboBox1.Name = "platformComboBox1";
+        platformComboBox1.Size = new Size(133, 23);
+        platformComboBox1.TabIndex = 8;
+        platformComboBox1.SelectedIndexChanged += platformComboBox1_SelectedIndexChanged;
         // 
         // Form1
         // 
@@ -213,5 +214,5 @@ partial class Form1
     private Button changeLocationButton;
     private Button UpdateOrInstallButton;
     private Button startCrpgButton;
-    private ComboBox comboBox1;
+    private ComboBox platformComboBox1;
 }
