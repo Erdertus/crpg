@@ -650,14 +650,14 @@ public partial class Form1 : Form
         Color backgroundColor = darkModeEnabled ? Color.FromArgb(45, 45, 48) : SystemColors.Window;
         Color foregroundColor = darkModeEnabled ? Color.White : SystemColors.WindowText;
         //Color controlBackgroundColor = darkModeEnabled ? Color.FromArgb(30, 30, 30) : SystemColors.Control;
-        
+
         BackColor = darkModeEnabled ? Color.FromArgb(30, 30, 32) : SystemColors.Window;
         ForeColor = foregroundColor;
         ConsoleTextBox.BackColor = backgroundColor;
         ConsoleTextBox.ForeColor = foregroundColor;
         locationTextBox.BackColor = backgroundColor;
         locationTextBox.ForeColor = foregroundColor;
-        
+
         foreach (Control ctrl in this.Controls)
         {
             //ctrl.BackColor = controlBackgroundColor;
@@ -718,7 +718,7 @@ public partial class Form1 : Form
 
     private void checkBox2_CheckedChanged(object sender, EventArgs e)
     {
-        if(isLoading)
+        if (isLoading)
         {
             return;
         }
@@ -733,5 +733,35 @@ public partial class Form1 : Form
             Config.devMode = false;
             Config.WriteConfig();
         }
+    }
+    private void buttonEnableStatusChange(object sender, EventArgs e)
+    {
+        foreach (Control ctrl in Controls)
+        {
+            Color backgroundColor = Config.darkMode ? Color.FromArgb(45, 45, 48) : SystemColors.Window;
+            Color foregroundColor = Config.darkMode ? Color.White : SystemColors.WindowText;
+            if (ctrl is Button button)
+            {
+                if (button.Enabled == false)
+                {
+                    ForeColor = Color.Red;
+                    BackColor = Color.Red;
+                }
+            }
+            //ctrl.BackColor = controlBackgroundColor;
+            //ctrl.ForeColor = foregroundColor;
+
+            // Add cases for other control types as needed
+        }
+    }
+
+    private void close_Click(object sender, EventArgs e)
+    {
+        this.Close();
+    }
+
+    private void minimize_Click(object sender, EventArgs e)
+    {
+        this.WindowState = FormWindowState.Minimized;
     }
 }

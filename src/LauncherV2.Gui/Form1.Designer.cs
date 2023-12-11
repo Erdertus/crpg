@@ -42,6 +42,8 @@ partial class Form1
         label1 = new Label();
         darkModecheckBox1 = new CheckBox();
         devModeCheckBox = new CheckBox();
+        close = new Label();
+        minimize = new Label();
         tableLayoutPanel1.SuspendLayout();
         tableLayoutPanel2.SuspendLayout();
         tableLayoutPanel4.SuspendLayout();
@@ -101,6 +103,7 @@ partial class Form1
         verifyGameFilesButton.TabIndex = 5;
         verifyGameFilesButton.Text = "Verify Game Files";
         verifyGameFilesButton.UseVisualStyleBackColor = false;
+        verifyGameFilesButton.EnabledChanged += buttonEnableStatusChange;
         verifyGameFilesButton.Click += VerifyGameFilesButton_Click_1;
         // 
         // UpdateOrInstallButton
@@ -183,7 +186,7 @@ partial class Form1
         // 
         platformComboBox1.Anchor = AnchorStyles.None;
         platformComboBox1.FormattingEnabled = true;
-        platformComboBox1.Location = new Point(4, 47);
+        platformComboBox1.Location = new Point(4, 45);
         platformComboBox1.Margin = new Padding(4);
         platformComboBox1.Name = "platformComboBox1";
         platformComboBox1.Size = new Size(170, 27);
@@ -222,11 +225,35 @@ partial class Form1
         devModeCheckBox.UseVisualStyleBackColor = true;
         devModeCheckBox.CheckedChanged += checkBox2_CheckedChanged;
         // 
+        // close
+        // 
+        close.AutoSize = true;
+        close.Font = new Font("Times New Roman", 16F);
+        close.Location = new Point(851, -7);
+        close.Name = "close";
+        close.Size = new Size(22, 25);
+        close.TabIndex = 4;
+        close.Text = "x";
+        close.Click += close_Click;
+        // 
+        // minimize
+        // 
+        minimize.AutoSize = true;
+        minimize.Font = new Font("Times New Roman", 14F);
+        minimize.Location = new Point(830, -5);
+        minimize.Name = "minimize";
+        minimize.Size = new Size(20, 21);
+        minimize.TabIndex = 5;
+        minimize.Text = "–";
+        minimize.Click += minimize_Click;
+        // 
         // Form1
         // 
         AutoScaleDimensions = new SizeF(9F, 19F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(874, 425);
+        Controls.Add(minimize);
+        Controls.Add(close);
         Controls.Add(devModeCheckBox);
         Controls.Add(darkModecheckBox1);
         Controls.Add(label1);
@@ -261,4 +288,6 @@ partial class Form1
     private Label label1;
     private CheckBox darkModecheckBox1;
     private CheckBox devModeCheckBox;
+    private Label close;
+    private Label minimize;
 }
