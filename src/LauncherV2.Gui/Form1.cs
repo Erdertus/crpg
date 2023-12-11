@@ -1,7 +1,10 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Net;
+using System.Security.Policy;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -10,6 +13,7 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using static System.Net.Mime.MediaTypeNames;
 using static LauncherV2.Gui.LauncherHelper.GameInstallationFolderResolver;
 using Application = System.Windows.Forms.Application;
+using ICSharpCode.SharpZipLib.Tar;
 namespace LauncherV2;
 
 public partial class Form1 : Form
@@ -25,7 +29,7 @@ public partial class Form1 : Form
         InitializeComponent();
         Instance = this;
         // Initialize the timer
-        
+
         _flushTimer = new System.Windows.Forms.Timer();
         _flushTimer.Interval = 400; // Set the interval for flushing the text
         _flushTimer.Tick += FlushTimer_Tick!;
@@ -121,17 +125,24 @@ public partial class Form1 : Form
 
     }
 
-    private void FlushTimer_Tick(object sender, EventArgs e)
+    private async void FlushTimer_Tick(object sender, EventArgs e)
     {
-        // Thread-safe flush
-        FlushTextToTextBox();
+        // Stop the timer to prevent re-entrancy issues
+        _flushTimer?.Stop();
+
+        // Thread-safe asynchronous flush
+        await FlushTextToTextBoxAsync();
+
+        // Restart the timer
+        _flushTimer?.Start();
     }
 
-    private void FlushTextToTextBox()
+    private async Task FlushTextToTextBoxAsync()
     {
         if (ConsoleTextBox.InvokeRequired)
         {
-            ConsoleTextBox.Invoke(new Action(FlushTextToTextBox));
+            // Invoke the method on the UI thread
+            ConsoleTextBox.BeginInvoke(new MethodInvoker(() => FlushTextToTextBoxAsync()));
         }
         else
         {
@@ -143,6 +154,7 @@ public partial class Form1 : Form
             ConsoleTextBox.ScrollToCaret();
         }
     }
+
     public void WriteToConsole(string text)
     {
         _messageQueue.Enqueue(text);
@@ -190,7 +202,7 @@ public partial class Form1 : Form
 
     private void HandlePlatformChange(Platform? platform)
     {
-        if(isLoading)
+        if (isLoading)
         {
             return;
         }
@@ -234,8 +246,9 @@ public partial class Form1 : Form
         }
     }
 
-    private void UpdateOrInstallButton_Click(object sender, EventArgs e)
+    private async void UpdateOrInstallButton_Click(object sender, EventArgs e)
     {
+        EnableAllButton(false);
         if (!HashExist())
         {
             WriteToConsole("please verify your game files first");
@@ -264,7 +277,7 @@ public partial class Form1 : Form
             return;
         }
 
-        Dictionary<string, string> distantAssets = new Dictionary<string,string>();
+        Dictionary<string, string> distantAssets = new Dictionary<string, string>();
         Dictionary<string, string> distantMaps = new Dictionary<string, string>();
         string distantRestHash = ReadHash(doc, distantAssets, distantMaps);
         XmlDocument doc2 = new XmlDocument();
@@ -289,6 +302,13 @@ public partial class Form1 : Form
         var mapsToDownload = distantMaps.Where(a => !localMaps.Contains(a)).ToList();
         var mapsToDelete = localMaps.Where(a => !distantMaps.Contains(a)).ToList();
 
+        if (assetsToDelete.Count == 0 && assetsToDownload.Count == 0 && mapsToDownload.Count == 0 && mapsToDelete.Count == 0 && !downloadRest)
+        {
+            WriteToConsole("Your game is Up To Date");
+            EnableAllButton(true);
+            return;
+        }
+
         if (gameLocation == null)
         {
             WriteToConsole("Cannot Download update as Bannerlord Location is not known");
@@ -299,20 +319,152 @@ public partial class Form1 : Form
         {
             string pathToDelete = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/AssetPackages/", assetToDelete.Key);
             WriteToConsole(pathToDelete);
-            File.Delete(pathToDelete);
+            try
+            {
+                File.Delete(pathToDelete);
+            }
+            catch
+            {
+
+            }
         }
 
         foreach (var mapToDelete in mapsToDelete)
         {
             string pathToDelete = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SceneObj/", mapToDelete.Key);
             WriteToConsole($"deleting {pathToDelete}");
-            Directory.Delete(pathToDelete, recursive: true);
+            try
+            {
+                Directory.Delete(pathToDelete, recursive: true);
+            }
+            catch
+            {
+            }
         }
 
-        foreach(var assetToDownload in assetsToDownload)
+        if (downloadRest)
         {
+            List<string> pathsToDelete = new List<string>()
+            {
+                Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/GUI"),
+                Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/ModuleSounds"),
+                Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/ModuleData"),
+                Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/bin"),
+            };
+            foreach(var path in pathsToDelete)
+            {
+                WriteToConsole($"deleting {path}");
+                try
+                {
+                    Directory.Delete(path, recursive: true);
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }
+
+            WriteToConsole($"deleting {Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SubModule.xml")}");
+            try
+            {
+                File.Delete(Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SubModule.xml"));
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+        List<Task> allTasks = new List<Task>();
+        bool updateSuccessful = true;
+        using (var client = new HttpClient())
+        {
+            foreach (var assetToDownload in assetsToDownload)
+            {
+                try
+                {
+                    // Download the file
+                    WriteToConsole($"Downloading and extracting {assetToDownload.Key + ".tar.gz"} ");
+                    var response = await client.GetAsync("https://namidaka.fr/AssetPackages/" + assetToDownload.Key + ".tar.gz");
+                    response.EnsureSuccessStatusCode();
+                    var contentType = response.Content!.Headers!.ContentType!.MediaType;
+                    if (contentType == "text/html")
+                    {
+                        throw new Exception("Expected file, but received HTML content. The file may not exist at the specified URL.");
+                    }
+
+                    var extractionTask1 = Task.Run(() => Extract(response, Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/AssetPackages/")));
+                    allTasks.Add(extractionTask1);
+                }
+                catch (Exception ex)
+                {
+                    updateSuccessful = false;
+                    WriteToConsole(ex.Message);
+                }
+            }
+
+            foreach (var mapToDownload in mapsToDownload)
+            {
+                try
+                {
+                    // Download the file
+                    WriteToConsole($"Downloading and extracting {mapToDownload.Key + ".tar.gz"} ");
+                    var response = await client.GetAsync("https://namidaka.fr/SceneObj/" + mapToDownload.Key + ".tar.gz");
+                    response.EnsureSuccessStatusCode();
+                    var contentType = response.Content!.Headers!.ContentType!.MediaType;
+                    if (contentType == "text/html")
+                    {
+                        throw new Exception("Expected file, but received HTML content. The file may not exist at the specified URL.");
+                    }
+                    var extractionTask2 = Task.Run(() => Extract(response, Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SceneObj/")));
+                    allTasks.Add(extractionTask2);
+                }
+                catch (Exception ex)
+                {
+                    updateSuccessful = false;
+                    WriteToConsole(ex.Message);
+                }
+            }
+
+            if (downloadRest)
+            {
+                try
+                {
+                    // Download the file
+                    WriteToConsole($"Downloading and extracting the xmls files : rest.tar.gz");
+                    var response = await client.GetAsync("https://namidaka.fr/rest.tar.gz");
+                    response.EnsureSuccessStatusCode();
+                    var contentType = response.Content!.Headers!.ContentType!.MediaType;
+                    if (contentType == "text/html")
+                    {
+                        throw new Exception("Expected file, but received HTML content. The file may not exist at the specified URL.");
+                    }
+                    var extractionTask3 = Task.Run(() => Extract(response, Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/")));
+                    allTasks.Add(extractionTask3);
+
+                }
+                catch (Exception ex)
+                {
+                    updateSuccessful = false;
+                    WriteToConsole(ex.Message);
+                }
+            }
 
         }
+
+        await Task.WhenAll(allTasks);
+        if(updateSuccessful)
+        {
+            doc.Save("crpgXmlHash.xml");
+            WriteToConsole("Update Finished");
+            
+        }
+        else
+        {
+            WriteToConsole("There were issues during the update");
+            WriteToConsole("It is possible that we are currently updating cRPG");
+            WriteToConsole("If problem persist in an hour, please contact and moderator on discord");
+        }
+        EnableAllButton(true);
     }
 
     private bool HashExist()
@@ -422,5 +574,29 @@ public partial class Form1 : Form
         }
 
         return string.Empty;
+    }
+
+    private async void Extract(HttpResponseMessage response, string path)
+    {
+        if(response == null)
+        {
+            WriteToConsole("why the fuck is this null???");
+            return;
+        }
+        using (var stream = await response.Content.ReadAsStreamAsync())
+        {
+            using (var gzipStream = new GZipStream(stream, CompressionMode.Decompress))
+            {
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                using (var tarArchive = TarArchive.CreateInputTarArchive(gzipStream))
+                {
+                    tarArchive.ExtractContents(path);
+                }
+            }
+        }
     }
 }

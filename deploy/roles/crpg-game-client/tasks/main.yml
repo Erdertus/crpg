@@ -117,7 +117,8 @@
     state: directory
     owner: nginx
     group: nginx
-- name: Copy contents of SceneObj to destination
+
+- name: Copy hash to destination
   ansible.builtin.copy:
     src: /tmp/hash.xml
     dest: "{{ crpg_ui_path }}"
@@ -127,16 +128,10 @@
 - name: Copy contents of SceneObj to destination
   ansible.builtin.copy:
     src: /tmp/SceneObj
-    dest: "{{ crpg_ui_path }}/SceneObj"
+    dest: "{{ crpg_ui_path }}"
     owner: nginx
     group: nginx
 
-- name: Ensure AssetPackages directory exists
-  ansible.builtin.file:
-    path: "{{ crpg_ui_path }}/AssetPackages"
-    state: directory
-    owner: nginx
-    group: nginx
 
 - name: Copy contents of AssetPackages to destination
   ansible.builtin.copy:
