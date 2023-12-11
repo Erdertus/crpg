@@ -42,13 +42,14 @@ internal static class CrpgHashMethods
     {
         XmlDocument document = new XmlDocument();
         var root = document.CreateElement("CrpgHashMap");
+        document.AppendChild(root);
         if (!Directory.Exists(path))
         {
             WriteToConsole($"cRPG is not installed at {path}");
             return document;
         }
 
-        document.AppendChild(root);
+        
         string[] folders = Directory.GetDirectories(path);
         string[] topFiles = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
         ulong restHash = 0;

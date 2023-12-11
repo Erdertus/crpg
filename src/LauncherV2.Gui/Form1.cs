@@ -14,6 +14,7 @@ using static System.Net.Mime.MediaTypeNames;
 using static LauncherV2.Gui.LauncherHelper.GameInstallationFolderResolver;
 using Application = System.Windows.Forms.Application;
 using ICSharpCode.SharpZipLib.Tar;
+using System.Drawing.Design;
 namespace LauncherV2;
 
 public partial class Form1 : Form
@@ -167,6 +168,12 @@ public partial class Form1 : Form
 
     private async void VerifyGameFilesButton_Click_1(object sender, EventArgs e)
     {
+        await Verify();
+        Update();
+    }
+
+    private async Task Verify()
+    {
         EnableAllButton(false);
         if (gameLocation == null)
         {
@@ -250,12 +257,15 @@ public partial class Form1 : Form
 
     private async void UpdateOrInstallButton_Click(object sender, EventArgs e)
     {
+        Update();
+    }
+    private async void Update()
+    {
         EnableAllButton(false);
         if (!HashExist())
         {
-            WriteToConsole("please verify your game files first");
-            EnableAllButton(true);
-            return;        }
+            await Verify();
+        }
 
         XmlDocument doc = new XmlDocument();
         try
@@ -350,30 +360,32 @@ public partial class Form1 : Form
 
         if (downloadRest)
         {
-            List<string> pathsToDelete = new List<string>()
+            string cRPGFolder = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/");
+            foreach (var dir in Directory.GetDirectories(cRPGFolder))
             {
-                Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/GUI"),
-                Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/ModuleSounds"),
-                Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/ModuleData"),
-                Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/bin"),
-            };
-            foreach(var path in pathsToDelete)
-            {
-                WriteToConsole($"deleting {path}");
-                try
+                if (Path.GetFileName(dir) == "SceneObj" || Path.GetFileName(dir) == "AssetPackages")
+                { continue; }
+                else
                 {
-                    Directory.Delete(path, recursive: true);
+                    WriteToConsole($"deleting {dir}");
+                    Directory.Delete(dir, recursive: true);
                 }
-                catch (Exception ex)
-                {
 
-                }
+            }
+            foreach (var file in Directory.GetFiles(cRPGFolder))
+            {
+                WriteToConsole($"deleting {file}");
+                File.Delete(file);
             }
 
-            WriteToConsole($"deleting {Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SubModule.xml")}");
             try
             {
-                File.Delete(Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SubModule.xml"));
+                string subModulePath = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SubModule.xml");
+                if (File.Exists(subModulePath))
+                {
+                    WriteToConsole($"deleting {subModulePath}");
+                    File.Delete(subModulePath);
+                }
             }
             catch (Exception ex)
             {
@@ -444,10 +456,12 @@ public partial class Form1 : Form
                     {
                         throw new Exception("Expected file, but received HTML content. The file may not exist at the specified URL.");
                     }
+
                     var extractionTask3 = Task.Run(() => Extract(response, Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/")));
                     allTasks.Add(extractionTask3);
 
                 }
+
                 catch (Exception ex)
                 {
                     updateSuccessful = false;
@@ -458,11 +472,11 @@ public partial class Form1 : Form
         }
 
         await Task.WhenAll(allTasks);
-        if(updateSuccessful)
+        if (updateSuccessful)
         {
             doc.Save("crpgXmlHash.xml");
             WriteToConsole("Update Finished");
-            
+
         }
         else
         {
@@ -470,6 +484,8 @@ public partial class Form1 : Form
             WriteToConsole("It is possible that we are currently updating cRPG");
             WriteToConsole("If problem persist in an hour, please contact and moderator on discord");
         }
+
+        UpdateOrInstallButton.Text = "Check For Update";
         EnableAllButton(true);
     }
 
@@ -584,11 +600,6 @@ public partial class Form1 : Form
 
     private async void Extract(HttpResponseMessage response, string path)
     {
-        if(response == null)
-        {
-            WriteToConsole("why the fuck is this null???");
-            return;
-        }
         using (var stream = await response.Content.ReadAsStreamAsync())
         {
             using (var gzipStream = new GZipStream(stream, CompressionMode.Decompress))
