@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -239,7 +240,83 @@ public partial class Form1 : Form
 
     private void UpdateOrInstallButton_Click(object sender, EventArgs e)
     {
-        WriteToConsole("Not Implemented Yet");
+        if (!HashExist())
+        {
+            WriteToConsole("please verify your game files first");
+            return;
+        }
+
+        XmlDocument doc = new XmlDocument();
+        try
+        {
+            string url = "http://namidaka.fr/hash.xml"; // Replace with your XML URL
+            using (WebClient client = new WebClient())
+            {
+                string xmlContent = client.DownloadString(url);
+                doc.LoadXml(xmlContent);
+            }
+        }
+        catch (Exception ex)
+        {
+            WriteToConsole($"Error: {ex.Message}");
+            return;
+        }
+
+
+        if (doc?.DocumentElement == null)
+        {
+            return;
+        }
+
+        Dictionary<string, string> distantAssets = new Dictionary<string,string>();
+        Dictionary<string, string> distantMaps = new Dictionary<string, string>();
+        string distantRestHash = ReadHash(doc, distantAssets, distantMaps);
+        XmlDocument doc2 = new XmlDocument();
+        try
+        {
+            doc2.Load("crpgXmlHash.xml");
+        }
+        catch (Exception ex)
+        {
+            WriteToConsole(ex.Message);
+            return;
+        }
+
+        Dictionary<string, string> localAssets = new Dictionary<string, string>();
+        Dictionary<string, string> localMaps = new Dictionary<string, string>();
+
+        string localRestHash = ReadHash(doc2, localAssets, localMaps);
+        bool downloadRest = localRestHash != distantRestHash;
+
+        var assetsToDownload = distantAssets.Where(a => !localAssets.Contains(a)).ToList();
+        var assetsToDelete = localAssets.Where(a => !distantAssets.Contains(a)).ToList();
+        var mapsToDownload = distantMaps.Where(a => !localMaps.Contains(a)).ToList();
+        var mapsToDelete = localMaps.Where(a => !distantMaps.Contains(a)).ToList();
+
+        if (gameLocation == null)
+        {
+            WriteToConsole("Cannot Download update as Bannerlord Location is not known");
+            return;
+        }
+
+        foreach (var assetToDelete in assetsToDelete)
+        {
+            string pathToDelete = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/AssetPackages/", assetToDelete.Key);
+            WriteToConsole(pathToDelete);
+            File.Delete(pathToDelete);
+        }
+
+        foreach (var mapToDelete in mapsToDelete)
+        {
+            string pathToDelete = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SceneObj/", mapToDelete.Key);
+            WriteToConsole($"deleting {pathToDelete}");
+            Directory.Delete(pathToDelete, recursive: true);
+        }
+
+        foreach(var assetToDownload in assetsToDownload)
+        {
+
+        }
     }
 
     private bool HashExist()
@@ -320,5 +397,34 @@ public partial class Form1 : Form
             // Handle other IO exceptions if necessary
             return false;
         }
+    }
+
+    private string ReadHash(XmlDocument doc, Dictionary<string, string> assets, Dictionary<string, string> maps)
+    {
+        foreach (var node in doc!.DocumentElement!.ChildNodes.Cast<XmlNode>().ToArray())
+        {
+            if (node.Name == "Assets")
+            {
+                foreach (var node1 in node.ChildNodes.Cast<XmlNode>().ToArray())
+                {
+                    assets[node1!.Attributes!["Name"]!.Value] = node1!.Attributes!["Hash"]!.Value;
+                }
+            }
+
+            if (node.Name == "Maps")
+            {
+                foreach (var node1 in node.ChildNodes.Cast<XmlNode>().ToArray())
+                {
+                    maps[node1!.Attributes!["Name"]!.Value] = node1!.Attributes!["Hash"]!.Value;
+                }
+            }
+
+            if (node.Name == "Rest")
+            {
+                return node!.Attributes!["Hash"]!.Value;
+            }
+        }
+
+        return string.Empty;
     }
 }

@@ -12,7 +12,7 @@ internal static class CrpgHashMethods
     public static void WriteToConsole(string text)
     {
 #if Launcher_Gui
-        WriteToConsole(text);
+        Form1.Instance?.WriteToConsole(text);
 #endif
 #if Launcher_Console
         Console.WriteLine(text);

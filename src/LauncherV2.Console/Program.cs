@@ -7,7 +7,7 @@ internal static class Program
     static void Main(string[] args)
     {
         ProcessArgs(args);
-        Console.WriteLine($"hashing now {hashFolderPath} , it should take less than 60s");
+        Console.WriteLine($"Hashing now {hashFolderPath} , it should take less than 60s");
         var hashXml = CrpgHashMethods.GenerateCrpgFolderHashMap(hashFolderPath).GetAwaiter().GetResult();
         hashXml.Save(hashOutputPath);
         Console.WriteLine($"hashing done, hash can be found at {hashOutputPath}");
