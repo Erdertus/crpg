@@ -171,9 +171,11 @@ public partial class Form1 : Form
         if (gameLocation == null)
         {
             WriteToConsole("Game Location is not properly set");
+            EnableAllButton(true);
             return;
         }
 
+        WriteToConsole("Verifying Game Files, Launcher May become unresponsive for the next 60 secs");
         await CrpgHashMethods.VerifyGameFiles(gameLocation.InstallationPath);
 
         verifyGameFilesButton.Enabled = true;
@@ -252,8 +254,8 @@ public partial class Form1 : Form
         if (!HashExist())
         {
             WriteToConsole("please verify your game files first");
-            return;
-        }
+            EnableAllButton(true);
+            return;        }
 
         XmlDocument doc = new XmlDocument();
         try
@@ -268,12 +270,14 @@ public partial class Form1 : Form
         catch (Exception ex)
         {
             WriteToConsole($"Error: {ex.Message}");
+            EnableAllButton(true);
             return;
         }
 
 
         if (doc?.DocumentElement == null)
         {
+            EnableAllButton(true);
             return;
         }
 
@@ -288,6 +292,7 @@ public partial class Form1 : Form
         catch (Exception ex)
         {
             WriteToConsole(ex.Message);
+            EnableAllButton(true);
             return;
         }
 
@@ -312,6 +317,7 @@ public partial class Form1 : Form
         if (gameLocation == null)
         {
             WriteToConsole("Cannot Download update as Bannerlord Location is not known");
+            EnableAllButton(true);
             return;
         }
 
