@@ -25,6 +25,9 @@ public partial class Form1 : Form
     private System.Windows.Forms.Timer? _flushTimer;
     private Platform platform = Platform.Epic;
     private bool isLoading;
+    private bool dragging = false;
+    private Point dragCursorPoint;
+    private Point dragFormPoint;
     public Form1()
     {
         InitializeComponent();
@@ -35,16 +38,30 @@ public partial class Form1 : Form
         _flushTimer.Interval = 400; // Set the interval for flushing the text
         _flushTimer.Tick += FlushTimer_Tick!;
         _flushTimer.Start();
+        FormBorderStyle = FormBorderStyle.None;
+        MouseDown += new MouseEventHandler(Form_MouseDown);
+        MouseMove += new MouseEventHandler(Form_MouseMove);
+        MouseUp += new MouseEventHandler(Form_MouseUp);
+        tableLayoutPanel4.MouseDown += new MouseEventHandler(Form_MouseDown);
+        tableLayoutPanel4.MouseMove += new MouseEventHandler(Form_MouseMove);
+        tableLayoutPanel4.MouseUp += new MouseEventHandler(Form_MouseUp);
+        tableLayoutPanel3.MouseDown += new MouseEventHandler(Form_MouseDown);
+        tableLayoutPanel3.MouseMove += new MouseEventHandler(Form_MouseMove);
+        tableLayoutPanel3.MouseUp += new MouseEventHandler(Form_MouseUp);
+        tableLayoutPanel2.MouseDown += new MouseEventHandler(Form_MouseDown);
+        tableLayoutPanel2.MouseMove += new MouseEventHandler(Form_MouseMove);
+        tableLayoutPanel2.MouseUp += new MouseEventHandler(Form_MouseUp);
+        tableLayoutPanel1.MouseDown += new MouseEventHandler(Form_MouseDown);
+        tableLayoutPanel1.MouseMove += new MouseEventHandler(Form_MouseMove);
+        tableLayoutPanel1.MouseUp += new MouseEventHandler(Form_MouseUp);
     }
 
     private void button2_Click(object sender, EventArgs e)
     {
-
     }
 
     private void textBox1_TextChanged(object sender, EventArgs e)
     {
-
     }
 
     private void ChangeLocationButton_Click(object sender, EventArgs e)
@@ -92,6 +109,8 @@ public partial class Form1 : Form
         }
 
         isLoading = true;
+        SetDarkMode(Config.darkMode);
+        darkModecheckBox1.Checked = Config.darkMode;
         platformComboBox1.DataSource = Enum.GetValues(typeof(Platform))
                   .Cast<Platform>()
                   .ToList();
@@ -106,6 +125,9 @@ public partial class Form1 : Form
         {
             platform = Config.platform;
             gameLocation = CreateGameInstallationInfo(Config.gameLocation, platform);
+            SetDarkMode(Config.darkMode);
+            darkModecheckBox1.Checked = Config.darkMode;
+            devModeCheckBox.Checked = Config.devMode;
             HandleGameLocationChange();
             if (!HashExist())
             {
@@ -123,7 +145,6 @@ public partial class Form1 : Form
                 HandlePlatformChange(null);
             }
         }
-
     }
 
     private async void FlushTimer_Tick(object sender, EventArgs e)
@@ -163,7 +184,6 @@ public partial class Form1 : Form
 
     private void textBox2_TextChanged(object sender, EventArgs e)
     {
-
     }
 
     private async void VerifyGameFilesButton_Click_1(object sender, EventArgs e)
@@ -193,7 +213,6 @@ public partial class Form1 : Form
 
     private void toolStripMenuItem1_Click(object sender, EventArgs e)
     {
-
     }
 
     private void platformComboBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -314,8 +333,18 @@ public partial class Form1 : Form
 
         var assetsToDownload = distantAssets.Where(a => !localAssets.Contains(a)).ToList();
         var assetsToDelete = localAssets.Where(a => !distantAssets.Contains(a)).ToList();
-        var mapsToDownload = distantMaps.Where(a => !localMaps.Contains(a)).ToList();
+        if (Config.devMode)
+        {
+            assetsToDelete = localAssets.Where(a => distantAssets.ContainsKey(a.Key) && !distantAssets.ContainsValue(a.Value)).ToList();
+        }
+
         var mapsToDelete = localMaps.Where(a => !distantMaps.Contains(a)).ToList();
+        if (Config.devMode)
+        {
+            mapsToDelete = localMaps.Where(a => distantMaps.ContainsKey(a.Key) && !distantMaps.ContainsValue(a.Value)).ToList();
+        }
+
+        var mapsToDownload = distantMaps.Where(a => !localMaps.Contains(a)).ToList();
 
         if (assetsToDelete.Count == 0 && assetsToDownload.Count == 0 && mapsToDownload.Count == 0 && mapsToDelete.Count == 0 && !downloadRest)
         {
@@ -341,7 +370,6 @@ public partial class Form1 : Form
             }
             catch
             {
-
             }
         }
 
@@ -357,39 +385,44 @@ public partial class Form1 : Form
             {
             }
         }
-
-        if (downloadRest)
+        string cRPGFolder = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/");
+        if (Config.devMode)
         {
-            string cRPGFolder = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/");
-            foreach (var dir in Directory.GetDirectories(cRPGFolder))
+            WriteToConsole("You're in Dev Mode. Only Assets and Maps will update. Other files remain untouched");
+            WriteToConsole("If you want to update the other files, Uncheck Dev Mode , then put back your files");
+        }
+        else
+        {
+            if (downloadRest && Directory.Exists(cRPGFolder))
             {
-                if (Path.GetFileName(dir) == "SceneObj" || Path.GetFileName(dir) == "AssetPackages")
-                { continue; }
-                else
+                foreach (var dir in Directory.GetDirectories(cRPGFolder))
                 {
-                    WriteToConsole($"deleting {dir}");
-                    Directory.Delete(dir, recursive: true);
+                    if (Path.GetFileName(dir) == "SceneObj" || Path.GetFileName(dir) == "AssetPackages")
+                    { continue; }
+                    else
+                    {
+                        WriteToConsole($"deleting {dir}");
+                        Directory.Delete(dir, recursive: true);
+                    }
+                }
+                foreach (var file in Directory.GetFiles(cRPGFolder))
+                {
+                    WriteToConsole($"deleting {file}");
+                    File.Delete(file);
                 }
 
-            }
-            foreach (var file in Directory.GetFiles(cRPGFolder))
-            {
-                WriteToConsole($"deleting {file}");
-                File.Delete(file);
-            }
-
-            try
-            {
-                string subModulePath = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SubModule.xml");
-                if (File.Exists(subModulePath))
+                try
                 {
-                    WriteToConsole($"deleting {subModulePath}");
-                    File.Delete(subModulePath);
+                    string subModulePath = Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/SubModule.xml");
+                    if (File.Exists(subModulePath))
+                    {
+                        WriteToConsole($"deleting {subModulePath}");
+                        File.Delete(subModulePath);
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-
+                catch (Exception ex)
+                {
+                }
             }
         }
         List<Task> allTasks = new List<Task>();
@@ -459,7 +492,6 @@ public partial class Form1 : Form
 
                     var extractionTask3 = Task.Run(() => Extract(response, Path.Combine(gameLocation.InstallationPath, "Modules/cRPG/")));
                     allTasks.Add(extractionTask3);
-
                 }
 
                 catch (Exception ex)
@@ -468,7 +500,6 @@ public partial class Form1 : Form
                     WriteToConsole(ex.Message);
                 }
             }
-
         }
 
         await Task.WhenAll(allTasks);
@@ -476,7 +507,6 @@ public partial class Form1 : Form
         {
             doc.Save("crpgXmlHash.xml");
             WriteToConsole("Update Finished");
-
         }
         else
         {
@@ -532,7 +562,6 @@ public partial class Form1 : Form
                 }
             }
         }
-
     }
 
     void EnableAllButton(bool enabled)
@@ -614,6 +643,95 @@ public partial class Form1 : Form
                     tarArchive.ExtractContents(path);
                 }
             }
+        }
+    }
+    private void SetDarkMode(bool darkModeEnabled)
+    {
+        Color backgroundColor = darkModeEnabled ? Color.FromArgb(45, 45, 48) : SystemColors.Window;
+        Color foregroundColor = darkModeEnabled ? Color.White : SystemColors.WindowText;
+        //Color controlBackgroundColor = darkModeEnabled ? Color.FromArgb(30, 30, 30) : SystemColors.Control;
+        
+        BackColor = darkModeEnabled ? Color.FromArgb(30, 30, 32) : SystemColors.Window;
+        ForeColor = foregroundColor;
+        ConsoleTextBox.BackColor = backgroundColor;
+        ConsoleTextBox.ForeColor = foregroundColor;
+        locationTextBox.BackColor = backgroundColor;
+        locationTextBox.ForeColor = foregroundColor;
+        
+        foreach (Control ctrl in this.Controls)
+        {
+            //ctrl.BackColor = controlBackgroundColor;
+            //ctrl.ForeColor = foregroundColor;
+
+            // Add cases for other control types as needed
+        }
+
+        // Update MenuStrip, ToolStrip, DataGridView, etc., as needed
+    }
+
+    private void tableLayoutPanel4_Paint(object sender, PaintEventArgs e)
+    {
+    }
+    void Form_MouseDown(object? sender, MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+        {
+            dragging = true;
+            dragCursorPoint = Cursor.Position;
+            dragFormPoint = this.Location;
+        }
+    }
+
+    void Form_MouseMove(object? sender, MouseEventArgs e)
+    {
+        if (dragging)
+        {
+            Point dif = Point.Subtract(Cursor.Position, new Size(dragCursorPoint));
+            this.Location = Point.Add(dragFormPoint, new Size(dif));
+        }
+    }
+
+    void Form_MouseUp(object? sender, MouseEventArgs e)
+    {
+        dragging = false;
+    }
+
+    private void checkBox1_CheckedChanged(object sender, EventArgs e)
+    {
+        if (isLoading)
+        {
+            return;
+        }
+        if (darkModecheckBox1.Checked)
+        {
+            SetDarkMode(true);
+            Config.darkMode = true;
+            Config.WriteConfig();
+        }
+        else
+        {
+            SetDarkMode(false);
+            Config.darkMode = false;
+            Config.WriteConfig();
+        }
+    }
+
+    private void checkBox2_CheckedChanged(object sender, EventArgs e)
+    {
+        if(isLoading)
+        {
+            return;
+        }
+
+        if (devModeCheckBox.Checked)
+        {
+            Config.devMode = true;
+            Config.WriteConfig();
+        }
+        else
+        {
+            Config.devMode = false;
+            Config.WriteConfig();
         }
     }
 }

@@ -30,7 +30,6 @@ internal static class CrpgHashMethods
             stopwatch.Stop(); // Stop the timing
             xmlDoc.Save("crpgXmlHash.xml");
             WriteToConsole($"Execution Time: {stopwatch.ElapsedMilliseconds} ms");
-
         }
         else
         {

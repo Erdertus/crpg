@@ -10,6 +10,8 @@ internal class Config
 {
     public static string gameLocation = string.Empty;
     public static GameInstallationFolderResolver.Platform platform;
+    public static bool devMode = false;
+    public static bool darkMode = true;
 
     public static bool ReadConfig()
     {
@@ -35,13 +37,28 @@ internal class Config
                         if (Enum.TryParse(value, out GameInstallationFolderResolver.Platform platformInConfig))
                         {
                             platform = platformInConfig;
-                            CrpgHashMethods.WriteToConsole("parsing platform");
                         }
                     }
 
                     if (key == "GameLocation")
                     {
                         gameLocation = value;
+                    }
+
+                    if (key == "DarkMode")
+                    {
+                        if (bool.TryParse(value, out bool darkModeParsed))
+                        {
+                            darkMode = darkModeParsed;
+                        }
+                    }
+
+                    if (key == "DevMode")
+                    {
+                        if (bool.TryParse(value, out bool devModeParsed))
+                        {
+                            devMode = devModeParsed;
+                        }
                     }
                 }
             }
@@ -56,8 +73,9 @@ internal class Config
         {
             $"GameLocation = {gameLocation}",
             $"Platform = {platform.ToString()}",
+            $"DevMode = {devMode.ToString()}",
+            $"DarkMode = {darkMode.ToString()}",
         };
         File.WriteAllLines("config.ini", lines);
     }
-
 }
