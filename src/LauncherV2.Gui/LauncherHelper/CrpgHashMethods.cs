@@ -154,12 +154,12 @@ internal static class CrpgHashMethods
     public static async Task<ulong> HashFile(string filePath)
     {
         ulong fileHash;
+        WriteToConsole($"Hashing {Path.GetFileName(filePath)}");
         using (FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 8192, useAsync: true))
         {
             fileHash = await XXHash.xxHash64.ComputeHashAsync(stream);
         }
 
-        WriteToConsole($"Hashing {Path.GetFileName(filePath)}");
         return fileHash;
     }
 }

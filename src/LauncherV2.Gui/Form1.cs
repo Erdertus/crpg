@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
@@ -15,7 +16,7 @@ public partial class Form1 : Form
 {
     public static Form1? Instance { get; private set; }
     private GameInstallationInfo? gameLocation;
-    private StringBuilder _updateText = new StringBuilder();
+    private ConcurrentQueue<string> _messageQueue = new ConcurrentQueue<string>();
     private System.Windows.Forms.Timer? _flushTimer;
     private Platform platform = Platform.Epic;
     private bool isLoading;
@@ -24,6 +25,7 @@ public partial class Form1 : Form
         InitializeComponent();
         Instance = this;
         // Initialize the timer
+        
         _flushTimer = new System.Windows.Forms.Timer();
         _flushTimer.Interval = 400; // Set the interval for flushing the text
         _flushTimer.Tick += FlushTimer_Tick!;
@@ -133,23 +135,17 @@ public partial class Form1 : Form
         }
         else
         {
-            if (_updateText.Length > 0)
+            while (_messageQueue.TryDequeue(out string? text))
             {
-                ConsoleTextBox.AppendText(_updateText.ToString());
-                ConsoleTextBox.ScrollToCaret();
-                _updateText.Clear();
+                ConsoleTextBox.AppendText(text + Environment.NewLine);
             }
+
+            ConsoleTextBox.ScrollToCaret();
         }
     }
     public void WriteToConsole(string text)
     {
-        // Locking is not strictly necessary if all updates come from other threads,
-        // but it's good practice if there's any chance of concurrent access.
-        lock (_updateText)
-        {
-            _updateText.AppendLine(text);
-        }
-        // No need to call FlushTextToTextBox here since the timer will handle it.
+        _messageQueue.Enqueue(text);
     }
 
     private void textBox2_TextChanged(object sender, EventArgs e)
